@@ -1,0 +1,27 @@
+[tool.ruff]
+exclude = ["models/__init__.py"]
+
+[tool.pdm.build]
+includes = []
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[project]
+authors = [
+    {name = "kirill", email = "shkolenko02-03-2004@mail.ru"},
+]
+requires-python = "<4.0,>=3.11"
+dependencies = [
+    "fastapi[all]<1.0.0,>=0.103.0",
+    "alembic<2.0.0,>=1.11.3",
+    "loguru<1.0.0,>=0.7.0",
+    "ruff<1.0.0,>=0.3.7",
+    "pre-commit<4.0.0,>=3.7.0",
+    "asyncpg<1.0.0,>=0.29.0",
+]
+name = "fastapitemplate"
+version = "0.1.0"
+description = ""
+readme = "README.md"
