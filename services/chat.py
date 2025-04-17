@@ -77,16 +77,21 @@ class ChatService:
 
         return chat
 
-    async def add_message(self, chat_id: uuid.UUID, message: str) -> bytes:
+    async def add_message(
+        self, chat_id: uuid.UUID, history_id: uuid.UUID | None, prompt: str
+    ) -> bytes:
         logger.debug("Chat - Service - add_message")
 
         message_id = uuid.uuid4()
 
-        last_message = await self._message_repo.get_latest_message(chat_id)
+        if history_id is None:
+            message = await self._message_repo.get_latest_message(chat_id)
+        else:
+            message = await self._message_repo.get(history_id)
 
-        pres = self._minio_service.get_pptx(chat_id, last_message.id)
+        pres = self._minio_service.get_pptx(chat_id, message.id)
 
-        edited_pres = self._ml_service.edit_pres(message, pres)
+        edited_pres = self._ml_service.edit_pres(prompt, pres)
 
         path = self._minio_service.save_pptx(
             chat_id, message_id, io.BytesIO(edited_pres)
@@ -96,7 +101,7 @@ class ChatService:
             Message(
                 id=message_id,
                 chat_id=chat_id,
-                message=message,
+                message=prompt,
                 path=path,
             )
         )

@@ -51,7 +51,7 @@ class MessageRepository:
         result = await self._db.execute(query)
         return list(result.scalars().all())
 
-    async def get_latest_message(self, chat_id):
+    async def get_latest_message(self, chat_id) -> Message:
         query = (
             select(Message)
             .filter(Message.chat_id == chat_id)
