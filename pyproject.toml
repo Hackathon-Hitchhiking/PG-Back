@@ -20,8 +20,9 @@ dependencies = [
     "ruff<1.0.0,>=0.3.7",
     "pre-commit<4.0.0,>=3.7.0",
     "asyncpg<1.0.0,>=0.29.0",
+    "minio>=7.2.15",
 ]
-name = "fastapitemplate"
+name = "pg-back"
 version = "0.1.0"
 description = ""
 readme = "README.md"

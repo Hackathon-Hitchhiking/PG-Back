@@ -10,7 +10,7 @@ class CRUDServiceMixin:
 
     async def list(self, limit: int, offset: int, **filters) -> List[Type[Any]]:
         logger.debug(f"{self._repo.model.__name__} - Service - list")
-        result = await self._repo.list(limit, offset, **filters)
+        result = await self._repo.get_list(limit, offset, **filters)
         return result
 
     async def get(self, id: uuid.UUID) -> Type[Any]:
