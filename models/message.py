@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 
 from sqlalchemy import ForeignKey, DateTime, func, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -8,8 +7,10 @@ from models.BaseModel import EntityMeta
 
 
 class Message(EntityMeta):
-    __tablename__ = 'message'
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    __tablename__ = "message"
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
 
     path: Mapped[str] = mapped_column(comment="the path in the s3")
 

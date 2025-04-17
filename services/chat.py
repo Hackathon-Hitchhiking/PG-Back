@@ -13,11 +13,13 @@ from services.ml import MLService
 
 
 class ChatService:
-    def __init__(self,
-                 repo: ChatRepository = Depends(),
-                 history_repo: MessageRepository = Depends(),
-                 ml_service: MLService = Depends(),
-                 minio_service: MinioService = Depends()):
+    def __init__(
+        self,
+        repo: ChatRepository = Depends(),
+        history_repo: MessageRepository = Depends(),
+        ml_service: MLService = Depends(),
+        minio_service: MinioService = Depends(),
+    ):
         self._repo = repo
         self._message_repo = history_repo
         self._ml_service = ml_service
@@ -35,24 +37,34 @@ class ChatService:
 
         return chat
 
-    async def get_chat_history(self, chat_id: uuid.UUID, offset: int = 0, limit: int = 100) -> list[Message]:
+    async def get_chat_history(
+        self, chat_id: uuid.UUID, offset: int = 0, limit: int = 100
+    ) -> list[Message]:
         logger.debug("Chat - Service - get_chat_history")
 
-        chat_history = await self._message_repo.list(offset=offset, limit=limit, chat_id=chat_id)
+        chat_history = await self._message_repo.list(
+            offset=offset, limit=limit, chat_id=chat_id
+        )
 
         return chat_history
 
-    async def create(self, title: str, user_id: uuid.UUID | None, presentation: bytes) -> Chat:
+    async def create(
+        self, title: str, user_id: uuid.UUID | None, presentation: bytes
+    ) -> Chat:
         logger.debug("Chat - Service - create")
 
         message_id = uuid.uuid4()
 
-        chat = await self._repo.create(Chat(
-            title=title,
-            user_id=user_id,
-        ))
+        chat = await self._repo.create(
+            Chat(
+                title=title,
+                user_id=user_id,
+            )
+        )
 
-        minio_path = self._minio_service.save_pptx(chat.id, message_id, io.BytesIO(presentation))
+        minio_path = self._minio_service.save_pptx(
+            chat.id, message_id, io.BytesIO(presentation)
+        )
 
         message = Message(
             id=message_id,
@@ -76,16 +88,17 @@ class ChatService:
 
         edited_pres = self._ml_service.edit_pres(message, pres)
 
-        path = self._minio_service.save_pptx(chat_id, message_id, io.BytesIO(edited_pres))
+        path = self._minio_service.save_pptx(
+            chat_id, message_id, io.BytesIO(edited_pres)
+        )
 
-        await self._message_repo.create(Message(
-            id=message_id,
-            chat_id=chat_id,
-            message=message,
-            path=path,
-        ))
+        await self._message_repo.create(
+            Message(
+                id=message_id,
+                chat_id=chat_id,
+                message=message,
+                path=path,
+            )
+        )
 
         return edited_pres
-
-
-

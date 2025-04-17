@@ -1,5 +1,5 @@
 [tool.ruff]
-exclude = ["models/__init__.py"]
+exclude = ["models/*"]
 
 [tool.pdm.build]
 includes = []

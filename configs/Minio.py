@@ -1,5 +1,3 @@
-from typing import Any, Generator
-
 from minio import Minio
 
 from configs.Environment import get_environment_variables

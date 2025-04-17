@@ -62,9 +62,7 @@ class MinioRepository:
         return url
 
     def get_object_as_bytes(
-            self,
-            object_path: str,
-            bucket_name: str = base_bucket
+        self, object_path: str, bucket_name: str = base_bucket
     ) -> bytes:
         logger.debug("Minio - Repository - get_object_as_bytes")
         with self._client.get_object(bucket_name, object_path) as response:

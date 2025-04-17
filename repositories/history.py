@@ -38,7 +38,9 @@ class MessageRepository:
         await self._db.refresh(message)
         return message
 
-    async def list(self, offset: int = 0, limit: int = 100, chat_id: uuid.UUID | None = None) -> list[Message]:
+    async def list(
+        self, offset: int = 0, limit: int = 100, chat_id: uuid.UUID | None = None
+    ) -> list[Message]:
         logger.debug("Message - Repository - list")
 
         query = select(Message).offset(offset).limit(limit)
@@ -50,7 +52,12 @@ class MessageRepository:
         return list(result.scalars().all())
 
     async def get_latest_message(self, chat_id):
-        query = select(Message).filter(Message.chat_id == chat_id).order_by(desc(Message.created_at)).limit(1)
+        query = (
+            select(Message)
+            .filter(Message.chat_id == chat_id)
+            .order_by(desc(Message.created_at))
+            .limit(1)
+        )
 
         result = await self._db.execute(query)
 
