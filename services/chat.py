@@ -1,5 +1,7 @@
 import io
 import uuid
+import time
+from datetime import datetime
 
 from fastapi import Depends
 from loguru import logger
@@ -8,6 +10,7 @@ from models.chat import Chat
 from models.message import Message
 from repositories.chat import ChatRepository
 from repositories.history import MessageRepository
+from schemas.chat import ChatResponseWithMessages, MessageResponse
 from services.minio import MinioService
 from services.ml import MLService
 
@@ -31,11 +34,23 @@ class ChatService:
 
         return chats
 
-    async def get(self, chat_id: uuid.UUID) -> Chat:
+    async def get(self, chat_id: uuid.UUID) -> ChatResponseWithMessages:
         logger.debug("Chat - Service - get_chat")
         chat = await self._repo.get(chat_id)
 
-        return chat
+        return ChatResponseWithMessages(
+            id=chat.id,
+            title=chat.title,
+            # TODO fix this
+            created_at=datetime.now(),
+            updated_at=datetime.now(),
+            messages=[MessageResponse(
+                id=message.id,
+                message=message.message,
+                created_at=message.created_at,
+                path=self._minio_service.get_link(message.path),
+            ) for message in chat.messages],
+        )
 
     async def get_chat_history(
         self, chat_id: uuid.UUID, offset: int = 0, limit: int = 100

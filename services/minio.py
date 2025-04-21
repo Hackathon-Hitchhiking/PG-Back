@@ -29,3 +29,6 @@ class MinioService:
         return self._repo.get_object_as_bytes(
             self.create_message_pptx_path(chat_id, message_id)
         )
+
+    def get_link(self, path: str) -> str:
+        return self._repo.get_link(path)

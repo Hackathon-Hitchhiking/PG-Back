@@ -54,7 +54,7 @@ class MinioRepository:
         if not found:
             self._client.make_bucket(name)
 
-    def get_link(self, object_path: str, bucket_name: str) -> str:
+    def get_link(self, object_path: str, bucket_name: str = base_bucket) -> str:
         logger.debug("Minio - Repository - get_link")
 
         url = self._client.get_presigned_url("GET", bucket_name, object_path)
