@@ -44,8 +44,8 @@ async def create(
 @router.post("/{id}/add_message", summary="add the message to chat")
 async def add_message(
     chat_id: uuid.UUID,
-    history_id: uuid.UUID | None,
     message: str,
+    history_id: uuid.UUID | None = None,
     chat_service: ChatService = Depends(),
 ):
     presentation = await chat_service.add_message(chat_id, history_id, message)
