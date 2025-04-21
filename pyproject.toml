@@ -15,7 +15,7 @@ authors = [
 requires-python = "<4.0,>=3.11"
 dependencies = [
     "fastapi[all]<1.0.0,>=0.103.0",
-    "alembic<2.0.0,>=1.11.3",
+    "alembic>=1.11.3,<2.0.0",
     "loguru<1.0.0,>=0.7.0",
     "ruff<1.0.0,>=0.3.7",
     "pre-commit<4.0.0,>=3.7.0",
