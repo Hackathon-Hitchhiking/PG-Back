@@ -21,6 +21,7 @@ dependencies = [
     "pre-commit<4.0.0,>=3.7.0",
     "asyncpg<1.0.0,>=0.29.0",
     "minio>=7.2.15",
+    "uvicorn>=0.34.0",
 ]
 name = "pg-back"
 version = "0.1.0"

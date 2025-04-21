@@ -602,6 +602,7 @@ dependencies = [
     { name = "minio" },
     { name = "pre-commit" },
     { name = "ruff" },
+    { name = "uvicorn" },
 ]
 
 [package.metadata]
@@ -613,6 +614,7 @@ requires-dist = [
     { name = "minio", specifier = ">=7.2.15" },
     { name = "pre-commit", specifier = ">=3.7.0,<4.0.0" },
     { name = "ruff", specifier = ">=0.3.7,<1.0.0" },
+    { name = "uvicorn", specifier = ">=0.34.0" },
 ]
 
 [[package]]
