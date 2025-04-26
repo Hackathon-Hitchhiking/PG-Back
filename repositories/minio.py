@@ -10,7 +10,7 @@ from schemas.minio import MinioContentType
 
 class MinioRepository:
     def __init__(self, client: Minio = Depends(get_minio_client)):
-        self._client = client
+        self._client: Minio = client
         self.create_bucket(base_bucket)
 
     def create_object_from_byte(
@@ -57,7 +57,9 @@ class MinioRepository:
     def get_link(self, object_path: str, bucket_name: str = base_bucket) -> str:
         logger.debug("Minio - Repository - get_link")
 
-        url = self._client.get_presigned_url("GET", bucket_name, object_path)
+        # url = self._client.get_presigned_url("GET", bucket_name, object_path)
+
+        url = f"{self._client._base_url}/{bucket_name}/{object_path}"
 
         return url
 
