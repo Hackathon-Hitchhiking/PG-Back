@@ -59,7 +59,7 @@ class MinioRepository:
 
         # url = self._client.get_presigned_url("GET", bucket_name, object_path)
 
-        url = f"{str(self._client._base_url._url.geturl)}/{bucket_name}/{object_path}"
+        url = f"{str(self._client._base_url._url.geturl())}/{bucket_name}/{object_path}"
 
         return url
 
