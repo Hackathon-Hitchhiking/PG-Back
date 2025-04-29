@@ -4,7 +4,7 @@ requires-python = ">=3.11, <4.0"
 
 [[package]]
 name = "agno"
-version = "1.4.2"
+version = "1.2.15"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "docstring-parser" },
@@ -20,9 +20,9 @@ dependencies = [
     { name = "typer" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c9/c4/0b0d33bcfc0e567caf52e9d548aabfe30de80614e8401d7a3ee38c9c3ca7/agno-1.4.2.tar.gz", hash = "sha256:4c6365855542e26781bc41c9e93920dcc14f111c099b8a5809cd5e81a54d2fd7", size = 522650 }
+sdist = { url = "https://files.pythonhosted.org/packages/2d/e6/5f747db61e35500750b9f595e8836649bd0d7a22ed0c2ec41167e5dec8bc/agno-1.2.15.tar.gz", hash = "sha256:b589d1277c756e5d8ed5c5ad2052d7910e1c2ad007fa3c830a4e8332809f2099", size = 467123 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d6/c2/8e44f6f21bde2950ac6041f8ef52e0cf27d19d417e2d82e008a1aea3520e/agno-1.4.2-py3-none-any.whl", hash = "sha256:76aa7823bfff7effa00c3af5260bbe35d6f3fde7a7e5b41d01ad4aec644c6f07", size = 685205 },
+    { url = "https://files.pythonhosted.org/packages/27/4b/05c42f236c18d11b29af368910df398a8a67e4f5c5681ead30ebde07a548/agno-1.2.15-py3-none-any.whl", hash = "sha256:e82b57f2980bff1ce7574a16ed963485f2efa3519e9322e17fa6ba07719bd5e2", size = 616626 },
 ]
 
 [[package]]
@@ -868,7 +868,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "agno", specifier = ">=1.4.2" },
+    { name = "agno", specifier = "==1.2.15" },
     { name = "alembic", specifier = ">=1.11.3,<2.0.0" },
     { name = "asyncpg", specifier = ">=0.29.0,<1.0.0" },
     { name = "fastapi", extras = ["all"], specifier = ">=0.103.0,<1.0.0" },

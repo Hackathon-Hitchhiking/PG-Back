@@ -22,7 +22,7 @@ dependencies = [
     "asyncpg<1.0.0,>=0.29.0",
     "minio>=7.2.15",
     "uvicorn>=0.34.0",
-    "agno>=1.4.2",
+    "agno==1.2.15",
     "openai>=1.76.0",
     "python-pptx>=1.0.2",
     "pdf2image>=1.17.0",
