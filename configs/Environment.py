@@ -16,6 +16,10 @@ class EnvironmentSettings(BaseSettings):
     MINIO_HOST: str
     MINIO_BASE_BUCKET: str
 
+    PROXY_HOST: str
+
+    OPENAI_API_KEY: str
+
     DEBUG: bool
 
     class Config:
