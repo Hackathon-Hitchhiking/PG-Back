@@ -29,7 +29,3 @@ model_41 = OpenAIChat(
 model_4o = OpenAIChat(
     id="gpt-4o", client=open_sync_client, async_client=open_async_client
 )
-
-style_agent_model = OpenAIChat(
-    id="gpt-4.1-mini", client=open_sync_client, async_client=open_async_client
-)
