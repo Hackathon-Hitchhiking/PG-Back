@@ -38,7 +38,9 @@ class PPTXManager(
     TableManager,
     FigureManager,
 ):
-    def __init__(self, source: str | bytes | None, parse_slide_image: bool = False) -> None:
+    def __init__(
+        self, source: str | bytes | None, parse_slide_image: bool = False
+    ) -> None:
         super().__init__()
         TextFrameManager.__init__(self)
         ImageManager.__init__(self)
@@ -58,9 +60,7 @@ class PPTXManager(
             self.pres = Presentation()
             self.source = None
         else:
-            raise TypeError(
-                'source must be str (filename), bytes (raw pptx) or None'
-            )
+            raise TypeError("source must be str (filename), bytes (raw pptx) or None")
 
         self.parse_choice = {
             MSO_SHAPE_TYPE.PICTURE: self._parse_image_shape,
@@ -85,11 +85,11 @@ class PPTXManager(
         with TemporaryDirectory() as temp_dir:
             subprocess.run(
                 [
-                    os.environ.get('LIBREOFFICE_PATH', 'libreoffice'),
-                    '--headless',
-                    '--convert-to',
-                    'pdf',
-                    '--outdir',
+                    os.environ.get("LIBREOFFICE_PATH", "libreoffice"),
+                    "--headless",
+                    "--convert-to",
+                    "pdf",
+                    "--outdir",
                     temp_dir,
                     self.source,
                 ],
@@ -98,21 +98,25 @@ class PPTXManager(
 
             pptx_filename = os.path.basename(self.source)
             base_name = os.path.splitext(pptx_filename)[0]
-            pdf_path = os.path.join(temp_dir, base_name + '.pdf')
+            pdf_path = os.path.join(temp_dir, base_name + ".pdf")
 
             if not os.path.exists(pdf_path):
-                raise FileNotFoundError(f'PDF conversion failed; file not found at {pdf_path}')
+                raise FileNotFoundError(
+                    f"PDF conversion failed; file not found at {pdf_path}"
+                )
 
             pages = convert_from_path(pdf_path, dpi=200)
 
             for idx, page in enumerate(pages):
                 image_buffer = BytesIO()
-                page.save(image_buffer, format='PNG')
+                page.save(image_buffer, format="PNG")
 
                 self.slide_image[idx + 1] = image_buffer.getvalue()
 
     def parse_presentation(self) -> None:
-        logger.debug(f'Анализ презентации вызван с количеством слайдов = {len(self.pres.slides)}')
+        logger.debug(
+            f"Анализ презентации вызван с количеством слайдов = {len(self.pres.slides)}"
+        )
         slide_id = 1
 
         for slide in self.pres.slides:
@@ -159,7 +163,12 @@ class PPTXManager(
             slide_json = self.get_slide_json(slide_id)
             figure_json = self.get_figure_frame_json(slide_id)
 
-            pres_json[slide_id] = {'text': text_json, 'image': image_json, 'slide': slide_json, 'figure': figure_json}
+            pres_json[slide_id] = {
+                "text": text_json,
+                "image": image_json,
+                "slide": slide_json,
+                "figure": figure_json,
+            }
 
         return pres_json
 
@@ -188,7 +197,9 @@ class PPTXManager(
         Returns:
             str: Сообщение о результате операции с подробным описанием созданной фигуры.
         """
-        logger.debug(f'Вызов create_text_shape с параметрами slide_id={slide_id}, opts={opts}')
+        logger.debug(
+            f"Вызов create_text_shape с параметрами slide_id={slide_id}, opts={opts}"
+        )
         shape, shape_id = self._add_shape_on_slide(
             slide_id,
             CreateShapeOpts(
@@ -233,7 +244,9 @@ class PPTXManager(
         Returns:
             str: Сообщение о результате операции с информацией об удаленной фигуре.
         """
-        logger.debug(f'Вызов delete_text_shape с параметрами slide_id={slide_id}, shape_id={shape_id}')
+        logger.debug(
+            f"Вызов delete_text_shape с параметрами slide_id={slide_id}, shape_id={shape_id}"
+        )
         shape = self._get_text_frame_shape(slide_id, shape_id)
         self._delete_text_frame_shape(slide_id, shape_id)
 
@@ -242,10 +255,10 @@ class PPTXManager(
             parent = el.getparent()
             parent.remove(el)
         except AttributeError:
-            logger.warning(f'Фигура с shape_id={shape_id} не найдена в shape_manager')
-            return f'Неизвестный идентификатор фигуры: {shape_id} на слайде {slide_id}'
+            logger.warning(f"Фигура с shape_id={shape_id} не найдена в shape_manager")
+            return f"Неизвестный идентификатор фигуры: {shape_id} на слайде {slide_id}"
 
-        return f'Текстовая фигура с ID {shape_id} успешно удалена со слайда {slide_id}'
+        return f"Текстовая фигура с ID {shape_id} успешно удалена со слайда {slide_id}"
 
     def delete_image_shape(self, slide_id: int, shape_id: int) -> str:
         """
@@ -260,7 +273,9 @@ class PPTXManager(
         Returns:
             str: Сообщение о результате операции с информацией об удаленном изображении.
         """
-        logger.debug(f'Вызов delete_image_shape с параметрами slide_id={slide_id}, shape_id={shape_id}')
+        logger.debug(
+            f"Вызов delete_image_shape с параметрами slide_id={slide_id}, shape_id={shape_id}"
+        )
         shape = self._get_image_frame_shape(slide_id, shape_id)
         self._delete_image_frame_shape(slide_id, shape_id)
 
@@ -269,10 +284,10 @@ class PPTXManager(
             parent = el.getparent()
             parent.remove(el)
         except AttributeError:
-            logger.warning(f'Фигура с shape_id={shape_id} не найдена в shape_manager')
-            return f'Неизвестный идентификатор фигуры с изображением: {shape_id} на слайде {slide_id}'
+            logger.warning(f"Фигура с shape_id={shape_id} не найдена в shape_manager")
+            return f"Неизвестный идентификатор фигуры с изображением: {shape_id} на слайде {slide_id}"
 
-        return f'Фигура с изображением (ID {shape_id}) успешно удалена со слайда {slide_id}'
+        return f"Фигура с изображением (ID {shape_id}) успешно удалена со слайда {slide_id}"
 
     def delete_figure_shape(self, slide_id: int, shape_id: int) -> str:
         """
@@ -285,7 +300,9 @@ class PPTXManager(
         Returns:
             str: Сообщение о результате операции.
         """
-        logger.debug(f'Вызов delete_figure_shape с параметрами slide_id={slide_id}, shape_id={shape_id}')
+        logger.debug(
+            f"Вызов delete_figure_shape с параметрами slide_id={slide_id}, shape_id={shape_id}"
+        )
         shape = self._get_shape(slide_id, shape_id)
         self._delete_shape(slide_id, shape_id)
 
@@ -294,10 +311,10 @@ class PPTXManager(
             parent = el.getparent()
             parent.remove(el)
         except AttributeError:
-            logger.warning(f'Фигура с shape_id={shape_id} не найдена в shape_manager')
-            return f'Неизвестный идентификатор фигуры: {shape_id} на слайде {slide_id}'
+            logger.warning(f"Фигура с shape_id={shape_id} не найдена в shape_manager")
+            return f"Неизвестный идентификатор фигуры: {shape_id} на слайде {slide_id}"
 
-        return f'Геометрическая фигура с ID {shape_id} успешно удалена со слайда {slide_id}'
+        return f"Геометрическая фигура с ID {shape_id} успешно удалена со слайда {slide_id}"
 
     def delete_slide(self, slide_id: int) -> str:
         """
@@ -309,13 +326,13 @@ class PPTXManager(
         Returns:
             str: Сообщение о результате операции.
         """
-        logger.debug(f'Вызов delete_slide с параметром slide_id={slide_id}')
+        logger.debug(f"Вызов delete_slide с параметром slide_id={slide_id}")
         try:
             self._delete_slide(slide_id)
         except Exception as e:
-            logger.warning(f'Ошибка при удалении слайда {slide_id}: {e}')
-            return f'Ошибка при удалении слайда {slide_id}: {e}'
-        return f'Слайд с ID {slide_id} успешно удалён'
+            logger.warning(f"Ошибка при удалении слайда {slide_id}: {e}")
+            return f"Ошибка при удалении слайда {slide_id}: {e}"
+        return f"Слайд с ID {slide_id} успешно удалён"
 
     def create_image_shape(self, slide_id: int, opts: CreateImageFrameOpts) -> str:
         """
@@ -336,7 +353,7 @@ class PPTXManager(
             str: Сообщение о результате операции с подробным описанием созданной фигуры с изображением.
         """
         logger.debug(
-            f'Вызов create_image_shape с параметрами slide_id={slide_id}, opts={opts.model_dump(exclude={"image"})}'
+            f"Вызов create_image_shape с параметрами slide_id={slide_id}, opts={opts.model_dump(exclude={'image'})}"
         )
 
         shape, shape_id = self._add_image_on_slide(
@@ -353,9 +370,11 @@ class PPTXManager(
 
         self._parse_image_shape(slide_id, shape_id, shape)
 
-        return f'Создана фигура с изображением на слайде {slide_id} (shape_id: {shape_id}) с параметрами: позиция ({opts.left}, {opts.top}), размер ({opts.width}x{opts.height})'
+        return f"Создана фигура с изображением на слайде {slide_id} (shape_id: {shape_id}) с параметрами: позиция ({opts.left}, {opts.top}), размер ({opts.width}x{opts.height})"
 
-    def copy_image_shape(self, slide_id_from: int, shape_id: int, slide_id_to: int) -> str:
+    def copy_image_shape(
+        self, slide_id_from: int, shape_id: int, slide_id_to: int
+    ) -> str:
         """
         Копирует изображение с одного слайда на другой.
 
@@ -368,15 +387,17 @@ class PPTXManager(
             str: Сообщение о результате операции.
         """
         logger.debug(
-            f'Вызов copy_image_shape с параметрами slide_id_from={slide_id_from}, shape_id={shape_id}, slide_id_to={slide_id_to}'
+            f"Вызов copy_image_shape с параметрами slide_id_from={slide_id_from}, shape_id={shape_id}, slide_id_to={slide_id_to}"
         )
 
         shape = self._get_image_frame_shape(slide_id_from, shape_id)
         if shape is None:
-            return f'Фигура с изображением (ID {shape_id}) не найдена на слайде {slide_id_from}.'
+            return f"Фигура с изображением (ID {shape_id}) не найдена на слайде {slide_id_from}."
 
         if shape.blob is None:
-            return f'Фигура с изображением (ID {shape_id}) не содержит данных изображения.'
+            return (
+                f"Фигура с изображением (ID {shape_id}) не содержит данных изображения."
+            )
 
         opts = CreateImageFrameOpts(
             left=shape.left,
@@ -387,10 +408,12 @@ class PPTXManager(
         )
 
         result = self.create_image_shape(slide_id_to, opts)
-        return f'Изображение (shape_id={shape_id}) успешно скопировано со слайда {slide_id_from} на слайд {slide_id_to}. {result}'
+        return f"Изображение (shape_id={shape_id}) успешно скопировано со слайда {slide_id_from} на слайд {slide_id_to}. {result}"
 
     # TODO: работает хуево, нужно исправить.
-    def copy_template_slide_to_presentation(self, slide_id: int, template_id: int, output_path: str) -> str:
+    def copy_template_slide_to_presentation(
+        self, slide_id: int, template_id: int, output_path: str
+    ) -> str:
         """
         Копирует единственный слайд из шаблона templates/template_{template_id}.pptx
         и вставляет его в основную презентацию под номером slide_id (1-based).
@@ -404,14 +427,14 @@ class PPTXManager(
         Returns:
             str: Сообщение о результате операции.
         """
-        template_path = f'templates/template_{template_id}.pptx'
+        template_path = f"templates/template_{template_id}.pptx"
         if not os.path.exists(template_path):
-            return f'Файл шаблона не найден: {template_path}'
+            return f"Файл шаблона не найден: {template_path}"
 
         # Используем PPTXManager для шаблона, чтобы получить корректную схему
         template_pr = PPTXManager(template_path, True)
         if template_pr.slide_count != 1:
-            return f'В шаблоне {template_path} должен быть ровно один слайд'
+            return f"В шаблоне {template_path} должен быть ровно один слайд"
 
         schema = template_pr.get_json_schema()
         slide_schema = schema[1]  # шаблон всегда один слайд, id=1
@@ -420,65 +443,65 @@ class PPTXManager(
         self.add_slide_at_position(slide_id, layout_index=0)
 
         # Копируем фигуры (figure)
-        for fig in slide_schema.get('figure', []):
+        for fig in slide_schema.get("figure", []):
             try:
                 self.add_figure_shape(
                     slide_id,
-                    fig['shape_type'],
-                    fig['left'],
-                    fig['top'],
-                    fig['width'],
-                    fig['height'],
-                    color=fig.get('color'),
-                    line_color=fig.get('line_color'),
-                    line_width=fig.get('line_width'),
-                    rounding=fig.get('rounding'),
-                    transparency=fig.get('transparency'),
-                    rotation=fig.get('rotation'),
+                    fig["shape_type"],
+                    fig["left"],
+                    fig["top"],
+                    fig["width"],
+                    fig["height"],
+                    color=fig.get("color"),
+                    line_color=fig.get("line_color"),
+                    line_width=fig.get("line_width"),
+                    rounding=fig.get("rounding"),
+                    transparency=fig.get("transparency"),
+                    rotation=fig.get("rotation"),
                 )
             except Exception as e:
-                logger.warning(f'Ошибка при копировании фигуры: {e}')
+                logger.warning(f"Ошибка при копировании фигуры: {e}")
 
         # Копируем текстовые блоки
-        for text in slide_schema.get('text', []):
+        for text in slide_schema.get("text", []):
             try:
                 self.create_text_shape(
                     slide_id,
                     CreateTextFrameOpts(
-                        left=text['left'],
-                        top=text['top'],
-                        width=text['width'],
-                        height=text['height'],
-                        text=text.get('text', ''),
-                        color=text.get('color'),
-                        size=text.get('size'),
-                        bold=text.get('bold'),
-                        italic=text.get('italic'),
-                        underline=text.get('underline'),
-                        font_name=text.get('font_name'),
-                        align=text.get('align'),
-                        vertical_align=text.get('vertical_align'),
+                        left=text["left"],
+                        top=text["top"],
+                        width=text["width"],
+                        height=text["height"],
+                        text=text.get("text", ""),
+                        color=text.get("color"),
+                        size=text.get("size"),
+                        bold=text.get("bold"),
+                        italic=text.get("italic"),
+                        underline=text.get("underline"),
+                        font_name=text.get("font_name"),
+                        align=text.get("align"),
+                        vertical_align=text.get("vertical_align"),
                     ),
                 )
             except Exception as e:
-                logger.warning(f'Ошибка при копировании текстового блока: {e}')
+                logger.warning(f"Ошибка при копировании текстового блока: {e}")
 
         # Копируем изображения
-        for img in slide_schema.get('image', []):
+        for img in slide_schema.get("image", []):
             try:
-                image_bytes = template_pr.get_image_frame_shape_blob(1, img['shape_id'])
+                image_bytes = template_pr.get_image_frame_shape_blob(1, img["shape_id"])
                 self.create_image_shape(
                     slide_id,
                     CreateImageFrameOpts(
-                        left=img['left'],
-                        top=img['top'],
-                        width=img['width'],
-                        height=img['height'],
+                        left=img["left"],
+                        top=img["top"],
+                        width=img["width"],
+                        height=img["height"],
                         image=image_bytes,
                     ),
                 )
             except Exception as e:
-                logger.warning(f'Ошибка при копировании изображения: {e}')
+                logger.warning(f"Ошибка при копировании изображения: {e}")
 
         # Можно добавить копирование таблиц и других элементов по аналогии
 
@@ -486,10 +509,10 @@ class PPTXManager(
         try:
             self.save(output_path)
         except Exception as e:
-            logger.error(f'Ошибка при сохранении презентации: {e}')
-            return f'Ошибка при сохранении презентации: {e}'
+            logger.error(f"Ошибка при сохранении презентации: {e}")
+            return f"Ошибка при сохранении презентации: {e}"
 
-        return f'Слайд из шаблона template_{template_id}.pptx успешно вставлен как слайд #{slide_id} и сохранён в {output_path}'
+        return f"Слайд из шаблона template_{template_id}.pptx успешно вставлен как слайд #{slide_id} и сохранён в {output_path}"
 
     def get_tasks_from_slide(self):
         text_frames = self.get_all_text_frame_json()
@@ -498,9 +521,9 @@ class PPTXManager(
 
         for slide_id, texts in text_frames.items():
             for text in texts:
-                if text['color'] == (255, 64, 0):
-                    tasks[slide_id] += text['text'] + '\n'
-                    self.delete_text_shape(slide_id, text['shape_id'])
+                if text["color"] == (255, 64, 0):
+                    tasks[slide_id] += text["text"] + "\n"
+                    self.delete_text_shape(slide_id, text["shape_id"])
 
         return tasks
 
@@ -513,9 +536,9 @@ class PPTXManager(
         return buffer.getvalue()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     load_dotenv()
-    pr = PPTXManager(os.environ.get('TEST_PRES_PATH'))
+    pr = PPTXManager(os.environ.get("TEST_PRES_PATH"))
 
     # rect1 = pr.add_figure_shape(
     #     2,
@@ -552,6 +575,6 @@ if __name__ == '__main__':
 
     logger.debug(pr.get_tasks_from_slide())
 
-    logger.debug(f'figure = {json.dumps(pr.get_text_frame_json(8), indent=4)}')
+    logger.debug(f"figure = {json.dumps(pr.get_text_frame_json(8), indent=4)}")
 
-    pr.save('test_create.pptx')
+    pr.save("test_create.pptx")

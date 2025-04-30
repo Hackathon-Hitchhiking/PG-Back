@@ -25,13 +25,13 @@ class SlideManager:
     def get_slide_json(self, slide_id: int) -> dict:
         return self.slide_metadata[slide_id].model_dump(
             exclude={
-                'slide_manager',
+                "slide_manager",
             }
         )
 
     def load_presentation(self, file_path: str) -> None:
         self.pres = Presentation(file_path)
-        logger.info(f'Презентация загружена из {file_path}')
+        logger.info(f"Презентация загружена из {file_path}")
 
     def swap_slides(self, slide_id1: int, slide_id2: int) -> str:
         """
@@ -55,14 +55,14 @@ class SlideManager:
             ValueError: Если презентация не загружена или указаны недопустимые индексы слайдов.
         """
         if not self.pres:
-            msg = 'Презентация не загружена. Сначала используйте метод `load_presentation`.'
+            msg = "Презентация не загружена. Сначала используйте метод `load_presentation`."
             raise ValueError(msg)
 
         slides = self.pres.slides._sldIdLst
         total_slides = len(slides)
 
         if not (1 <= slide_id1 <= total_slides and 1 <= slide_id2 <= total_slides):
-            msg = f'Недопустимые номера слайдов. Номера должны быть от 1 до {total_slides}'
+            msg = f"Недопустимые номера слайдов. Номера должны быть от 1 до {total_slides}"
             raise ValueError(msg)
 
         # Convert to 0-based indices
@@ -72,8 +72,10 @@ class SlideManager:
         # Perform the swap
         slides[idx1], slides[idx2] = slides[idx2], slides[idx1]
 
-        logger.info(f'Слайды на позициях {slide_id1} и {slide_id2} были обменены местами')
-        return 'Success'
+        logger.info(
+            f"Слайды на позициях {slide_id1} и {slide_id2} были обменены местами"
+        )
+        return "Success"
 
     def get_slide_size_px(self) -> tuple[float, float]:
         """
@@ -89,7 +91,7 @@ class SlideManager:
             ValueError: Если презентация не загружена
         """
         if not self.pres:
-            msg = 'Презентация не загружена. Сначала вызовите load_presentation()'
+            msg = "Презентация не загружена. Сначала вызовите load_presentation()"
             raise ValueError(msg)
 
         width_emu = self.pres.slide_width
@@ -97,7 +99,9 @@ class SlideManager:
 
         return (emu_to_px(width_emu), emu_to_px(height_emu))
 
-    def set_slide_background_color(self, slide_id: int, color_rgb: tuple[int, int, int]) -> str:
+    def set_slide_background_color(
+        self, slide_id: int, color_rgb: tuple[int, int, int]
+    ) -> str:
         """
         Устанавливает сплошной цвет фона для указанного слайда.
         Изменяет заливку фона слайда на указанный RGB-цвет. Если на слайде была применена другая заливка
@@ -129,16 +133,16 @@ class SlideManager:
             manager.set_slide_background_color(1, (34, 139, 34))
         """
         if not self.pres:
-            msg = 'Презентация не загружена. Сначала используйте метод `load_presentation`.'
+            msg = "Презентация не загружена. Сначала используйте метод `load_presentation`."
             raise ValueError(msg)
 
         if not all(0 <= c <= 255 for c in color_rgb):
-            msg = 'Значения цвета должны быть в диапазоне 0-255'
+            msg = "Значения цвета должны быть в диапазоне 0-255"
             raise ValueError(msg)
 
         slides = self.pres.slides
         if slide_id < 1 or slide_id > len(slides):
-            msg = f'Недопустимый номер слайда: {slide_id}'
+            msg = f"Недопустимый номер слайда: {slide_id}"
             raise ValueError(msg)
 
         slide = slides[slide_id - 1]
@@ -149,12 +153,12 @@ class SlideManager:
         r, g, b = color_rgb
         fill.fore_color.rgb = RGBColor(r, g, b)
 
-        logger.info(f'Цвет фона слайда {slide_id} изменен на RGB{color_rgb}')
-        return 'Success'
+        logger.info(f"Цвет фона слайда {slide_id} изменен на RGB{color_rgb}")
+        return "Success"
 
     def get_slide_count(self) -> int:
         if not self.pres:
-            msg = 'Презентация не загружена. Сначала используйте метод `load_presentation`.'
+            msg = "Презентация не загружена. Сначала используйте метод `load_presentation`."
             raise ValueError(msg)
 
         return len(self.pres.slides)
@@ -166,7 +170,10 @@ class SlideManager:
             # if there is no color on the slide setting the base white color
             foreground_color = [255, 255, 255]
         self.slide_metadata.insert(
-            slide_id, SlideFrame(slide_manager=slide, shape_count=1, background_color=foreground_color)
+            slide_id,
+            SlideFrame(
+                slide_manager=slide, shape_count=1, background_color=foreground_color
+            ),
         )
 
     def get_shape_count(self, slide_id: int) -> int:
@@ -180,7 +187,9 @@ class SlideManager:
     def _get_slide_manager(self, slide_id: int) -> Slide:
         return self.slide_metadata[slide_id].slide_manager
 
-    def _add_shape_on_slide(self, slide_id: int, opts: CreateShapeOpts) -> tuple[Shape, int]:
+    def _add_shape_on_slide(
+        self, slide_id: int, opts: CreateShapeOpts
+    ) -> tuple[Shape, int]:
         width = utils.px_to_emu(opts.width)
         height = utils.px_to_emu(opts.height)
 
@@ -191,7 +200,7 @@ class SlideManager:
         top = utils.px_to_emu(pix_top)
 
         logger.debug(
-            f'Вызов _add_shape_on_slide с параметрами: номер слайда={slide_id}, параметры={opts}, pix left={pix_left}, pix top={pix_top}, pix width={opts.width}, pix height={opts.height}'
+            f"Вызов _add_shape_on_slide с параметрами: номер слайда={slide_id}, параметры={opts}, pix left={pix_left}, pix top={pix_top}, pix width={opts.width}, pix height={opts.height}"
         )
         slide = self._get_slide_manager(slide_id)
 
@@ -206,8 +215,12 @@ class SlideManager:
 
         return shape, shape_id
 
-    def _add_image_on_slide(self, slide_id: int, image: bytes, opts: CreateShapeOpts) -> tuple[Shape, int]:
-        logger.debug(f'Вызов _add_image_on_slide с параметрами: номер слайда={slide_id}, параметры={opts}')
+    def _add_image_on_slide(
+        self, slide_id: int, image: bytes, opts: CreateShapeOpts
+    ) -> tuple[Shape, int]:
+        logger.debug(
+            f"Вызов _add_image_on_slide с параметрами: номер слайда={slide_id}, параметры={opts}"
+        )
         slide = self._get_slide_manager(slide_id)
 
         width = utils.px_to_emu(opts.width)
@@ -230,19 +243,19 @@ class SlideManager:
         parent = el.getparent()
         parent.remove(el)
 
-        return 'Success'
+        return "Success"
 
     def _delete_slide(self, slide_id: int) -> None:
         """
         Удаляет слайд из презентации и из метаданных.
         """
         if not self.pres:
-            msg = 'Презентация не загружена.'
+            msg = "Презентация не загружена."
             raise ValueError(msg)
 
         slides = self.pres.slides
         if slide_id < 1 or slide_id > len(slides):
-            msg = f'Недопустимый номер слайда: {slide_id}'
+            msg = f"Недопустимый номер слайда: {slide_id}"
             raise ValueError(msg)
 
         # Удаляем слайд из презентации
@@ -259,7 +272,10 @@ class SlideManager:
             del self.slide_metadata[slide_id]
 
     def add_slide_at_position(
-        self, position: int, layout_index: int = 0, background_color: list[int] | None = None
+        self,
+        position: int,
+        layout_index: int = 0,
+        background_color: list[int] | None = None,
     ) -> str:
         """
         Создает новый слайд в указанную позицию с заданным макетом и заголовком.
@@ -291,21 +307,21 @@ class SlideManager:
             background_color = [255, 255, 255]
 
         if not self.pres:
-            msg = 'Презентация не загружена. Сначала используйте метод `load_presentation`.'
+            msg = "Презентация не загружена. Сначала используйте метод `load_presentation`."
             raise ValueError(msg)
 
         max_position = len(self.pres.slides) + 1
         if not (1 <= position <= max_position):
-            msg = f'Недопустимая позиция {position}. Должна быть между 1 и {max_position}.'
+            msg = f"Недопустимая позиция {position}. Должна быть между 1 и {max_position}."
             raise ValueError(msg)
 
         if not (0 <= layout_index < len(self.pres.slide_layouts)):
-            msg = (
-                f'Недопустимый индекс макета {layout_index}. Должен быть между 0 и {len(self.pres.slide_layouts) - 1}.'
-            )
+            msg = f"Недопустимый индекс макета {layout_index}. Должен быть между 0 и {len(self.pres.slide_layouts) - 1}."
             raise ValueError(msg)
 
-        logger.debug(f'Вызов add_slide_at_position с параметрами: позиция={position}, индекс_макета={layout_index}')
+        logger.debug(
+            f"Вызов add_slide_at_position с параметрами: позиция={position}, индекс_макета={layout_index}"
+        )
 
         slide_layout = self.pres.slide_layouts[layout_index]
         new_slide = self.pres.slides.add_slide(slide_layout)
@@ -321,20 +337,24 @@ class SlideManager:
 
         self.slide_metadata.insert(
             position,
-            SlideFrame(slide_manager=new_slide, shape_count=0, background_color=background_color),
+            SlideFrame(
+                slide_manager=new_slide,
+                shape_count=0,
+                background_color=background_color,
+            ),
         )
 
-        return f'Слайд {position} был добавлен'
+        return f"Слайд {position} был добавлен"
 
     def test(self, source: str) -> None:
         self.load_presentation(source)
         self.add_slide_at_position(1, layout_index=0)
         self.add_slide_at_position(3, layout_index=0)
         self.set_slide_background_color(1, (255, 255, 0))
-        output_path = 'test_slide.pptx'
+        output_path = "test_slide.pptx"
         self.pres.save(output_path)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sm = SlideManager()
-    sm.test('../test_data/test_dit.pptx')
+    sm.test("../test_data/test_dit.pptx")

@@ -36,7 +36,7 @@ class TextFrameManager:
 
     def get_text_frame_json(self, slide_id: int) -> list[dict]:
         return [
-            shape.model_dump(exclude={'text_manager', 'font_manager', 'shape_manager'})
+            shape.model_dump(exclude={"text_manager", "font_manager", "shape_manager"})
             for shape in self.text_frame_shapes[slide_id]
         ]
 
@@ -46,7 +46,11 @@ class TextFrameManager:
         for slide_id, shapes in self.text_frame_shapes.items():
             shapes_json = []
             for shape in shapes:
-                shapes_json.append(shape.model_dump(exclude={'text_manager', 'font_manager', 'shape_manager'}))
+                shapes_json.append(
+                    shape.model_dump(
+                        exclude={"text_manager", "font_manager", "shape_manager"}
+                    )
+                )
             text_frame_json[slide_id] = shapes_json
 
         return text_frame_json
@@ -75,7 +79,7 @@ class TextFrameManager:
         brightness = font_color.brightness
 
         accent = theme_color.xml_value
-        xpath = f'a:themeElements/a:clrScheme/a:{accent}/a:srgbClr/@val'
+        xpath = f"a:themeElements/a:clrScheme/a:{accent}/a:srgbClr/@val"
 
         slide_master_part = slide.slide_layout.slide_master.part
         theme_part = slide_master_part.part_related_by(RT.THEME)
@@ -86,7 +90,7 @@ class TextFrameManager:
         except IndexError:
             return 0, 0, 0
 
-        srgb = np.array(ImageColor.getcolor(f'#{hex_color}', 'RGB'))
+        srgb = np.array(ImageColor.getcolor(f"#{hex_color}", "RGB"))
 
         srgb = srgb / 255
         h, luminance, s = colorsys.rgb_to_hls(*srgb)
@@ -106,7 +110,9 @@ class TextFrameManager:
 
         return font_size
 
-    def update_text_frame_shape(self, slide_id: int, shape_id: int | None, opts: UpdateTextFrameOpts | dict):
+    def update_text_frame_shape(
+        self, slide_id: int, shape_id: int | None, opts: UpdateTextFrameOpts | dict
+    ):
         """
         Updates the properties of a text frame shape in a specific slide.
 
@@ -139,7 +145,9 @@ class TextFrameManager:
         Returns:
             str: Confirmation of the completion of the task
         """
-        logger.debug(f'update_text_frame_shape calls with parameters: {slide_id, shape_id, opts}')
+        logger.debug(
+            f"update_text_frame_shape calls with parameters: {slide_id, shape_id, opts}"
+        )
 
         if isinstance(opts, dict):
             opts = UpdateTextFrameOpts(**opts)
@@ -150,7 +158,9 @@ class TextFrameManager:
                 frame.text = opts.text
 
             if opts.color is not None:
-                frame.font_manager.color.rgb = RGBColor(opts.color[0], opts.color[1], opts.color[2])
+                frame.font_manager.color.rgb = RGBColor(
+                    opts.color[0], opts.color[1], opts.color[2]
+                )
                 frame.color = (opts.color[0], opts.color[1], opts.color[2])
 
             if opts.italic is not None:
@@ -190,13 +200,17 @@ class TextFrameManager:
                 frame.font_name = opts.font_name
 
             if opts.align is not None:
-                frame.text_manager.paragraphs[0].alignment = utils.parse_text_align(opts.align)
+                frame.text_manager.paragraphs[0].alignment = utils.parse_text_align(
+                    opts.align
+                )
                 frame.align = opts.align
             if opts.vertical_align is not None:
-                frame.text_manager.vertical_anchor = utils.parse_text_vertical_align(opts.vertical_align)
+                frame.text_manager.vertical_anchor = utils.parse_text_vertical_align(
+                    opts.vertical_align
+                )
                 frame.vertical_align = opts.vertical_align
 
-        return 'Done'
+        return "Done"
 
     def _delete_text_frame_shape(self, slide_id: int, shape_id: int) -> None:
         frames = self.text_frame_shapes[slide_id]
@@ -204,7 +218,9 @@ class TextFrameManager:
             if frame.shape_id == shape_id:
                 del frames[index]
 
-    def _get_frame(self, slide_id: int, shape_id: int | None) -> Iterator[TextFrameShape]:
+    def _get_frame(
+        self, slide_id: int, shape_id: int | None
+    ) -> Iterator[TextFrameShape]:
         if slide_id < 0:
             slide_id = sorted(list(self.text_frame_shapes.keys()))[slide_id]
         frames = self.text_frame_shapes[slide_id]
@@ -213,7 +229,9 @@ class TextFrameManager:
                 continue
             yield frame
 
-    def _copy_font_properties(self, copy_font: Font, base_font: Font, slide: Slide) -> Font:
+    def _copy_font_properties(
+        self, copy_font: Font, base_font: Font, slide: Slide
+    ) -> Font:
         copy_font.name = base_font.name
         copy_font.size = Pt(self._get_font_size(base_font))
         copy_font.bold = base_font.bold
@@ -233,14 +251,18 @@ class TextFrameManager:
 
         return copy_font
 
-    def _get_text_frame_shape(self, slide_id: int, shape_id: int | None) -> TextFrameShape | None:
+    def _get_text_frame_shape(
+        self, slide_id: int, shape_id: int | None
+    ) -> TextFrameShape | None:
         for frame in self._get_frame(slide_id, shape_id):
             return frame
 
         return None
 
-    def _parse_text_shape(self, slide_id: int, shape_id: int, shape: Shape) -> TextFrameShape | None:
-        if shape.text == '' and shape.shape_type == MSO_SHAPE_TYPE.AUTO_SHAPE:
+    def _parse_text_shape(
+        self, slide_id: int, shape_id: int, shape: Shape
+    ) -> TextFrameShape | None:
+        if shape.text == "" and shape.shape_type == MSO_SHAPE_TYPE.AUTO_SHAPE:
             return None
         try:
             text_frame = shape.text_frame
@@ -248,18 +270,18 @@ class TextFrameManager:
             first_run_font = None
             full_text_lines = []
             for p_i, paragraph in enumerate(text_frame.paragraphs):
-                paragraph_text = ''
+                paragraph_text = ""
                 for r_i, run in enumerate(paragraph.runs):
                     if first_run_font is None:
                         first_run_font = run.font
                     paragraph_text += run.text
                 full_text_lines.append(paragraph_text)
 
-            merged_text = '\n'.join(full_text_lines)
+            merged_text = "\n".join(full_text_lines)
 
             if first_run_font is None:
                 logger.warning(
-                    f'Could not find base font for text frame with slide_id {slide_id}, shape_id {shape_id} using base shape'
+                    f"Could not find base font for text frame with slide_id {slide_id}, shape_id {shape_id} using base shape"
                 )
 
             text_frame.clear()
@@ -272,9 +294,13 @@ class TextFrameManager:
             slide = get_slide_from_shape(shape)
 
             if first_run_font is None:
-                text_frame_font = self._copy_font_properties(text_frame_font, single_run.font, slide)
+                text_frame_font = self._copy_font_properties(
+                    text_frame_font, single_run.font, slide
+                )
             else:
-                text_frame_font = self._copy_font_properties(text_frame_font, first_run_font, slide)
+                text_frame_font = self._copy_font_properties(
+                    text_frame_font, first_run_font, slide
+                )
 
             font_size = self._get_font_size(text_frame_font)
             font_color = self._get_font_color(slide, text_frame_font)
@@ -282,17 +308,21 @@ class TextFrameManager:
             bold = text_frame_font.bold
             italic = text_frame_font.italic
             underline = text_frame_font.underline
-            align = utils.text_align_to_str(text_frame.paragraphs[0].alignment) if text_frame.paragraphs else None
+            align = (
+                utils.text_align_to_str(text_frame.paragraphs[0].alignment)
+                if text_frame.paragraphs
+                else None
+            )
             vertical_align = (
                 utils.text_vertical_align_to_str(text_frame.vertical_anchor)
-                if hasattr(text_frame, 'vertical_anchor')
+                if hasattr(text_frame, "vertical_anchor")
                 else None
             )
 
             text = merged_text
 
         except Exception as e:
-            logger.warning(f'error parsing text_frame, text_shape = {shape.text}: {e}')
+            logger.warning(f"error parsing text_frame, text_shape = {shape.text}: {e}")
             return None
 
         text_frame_shape = TextFrameShape(
@@ -335,10 +365,10 @@ class TextFrameManager:
                         shape_id += 1
             slide_id += 1
 
-        self.pres.save('test.pptx')
+        self.pres.save("test.pptx")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     fm = TextFrameManager()
 
-    fm.test('../test_data/final_test_1.pptx')
+    fm.test("../test_data/final_test_1.pptx")

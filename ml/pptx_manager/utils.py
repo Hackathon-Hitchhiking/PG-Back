@@ -5,7 +5,7 @@ from pptx.util import Emu, Inches, Pt
 
 
 def get_all_methods(cls):
-    return [method for method in dir(cls) if not method.startswith('__')]
+    return [method for method in dir(cls) if not method.startswith("__")]
 
 
 def px_to_emu(px: int) -> int:
@@ -20,7 +20,7 @@ def emu_to_px(emu: int, dpi: int = 96) -> int:
 
 
 def hex_to_rgb(hex: str) -> tuple[int, ...]:
-    hex_code = hex.lstrip('#')
+    hex_code = hex.lstrip("#")
 
     return tuple(int(hex_code[i : i + 2], 16) for i in (0, 2, 4))
 
@@ -38,7 +38,7 @@ def get_slide_from_shape(shape: BaseShape) -> Slide:
         shape = shape._parent
         if isinstance(shape, Slide):
             return shape
-    raise ValueError('shape is not in a slide')
+    raise ValueError("shape is not in a slide")
 
 
 class CustomList:
@@ -70,18 +70,18 @@ class CustomList:
 
 
 _TEXT_ALIGN_MAP = {
-    'left': PP_ALIGN.LEFT,
-    'center': PP_ALIGN.CENTER,
-    'right': PP_ALIGN.RIGHT,
-    'justify': PP_ALIGN.JUSTIFY,
-    'distribute': PP_ALIGN.DISTRIBUTE,
+    "left": PP_ALIGN.LEFT,
+    "center": PP_ALIGN.CENTER,
+    "right": PP_ALIGN.RIGHT,
+    "justify": PP_ALIGN.JUSTIFY,
+    "distribute": PP_ALIGN.DISTRIBUTE,
 }
 _TEXT_ALIGN_MAP_REV = {v: k for k, v in _TEXT_ALIGN_MAP.items()}
 
 _TEXT_VERTICAL_ALIGN_MAP = {
-    'top': MSO_VERTICAL_ANCHOR.TOP,
-    'middle': MSO_VERTICAL_ANCHOR.MIDDLE,
-    'bottom': MSO_VERTICAL_ANCHOR.BOTTOM,
+    "top": MSO_VERTICAL_ANCHOR.TOP,
+    "middle": MSO_VERTICAL_ANCHOR.MIDDLE,
+    "bottom": MSO_VERTICAL_ANCHOR.BOTTOM,
 }
 _TEXT_VERTICAL_ALIGN_MAP_REV = {v: k for k, v in _TEXT_VERTICAL_ALIGN_MAP.items()}
 

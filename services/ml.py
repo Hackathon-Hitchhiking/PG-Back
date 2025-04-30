@@ -20,14 +20,16 @@ class MLService:
         style_agent = get_style_agent(pr)
         pptx_agent = get_pptx_agent(pr)
 
-        style_message =  style_agent.run(
-            f'Проанализируй этот пользовательский запрос и эталонную презентацию. Сгенерируй подробные инструкции для HeadAgent: {prompt}',
+        style_message = style_agent.run(
+            f"Проанализируй этот пользовательский запрос и эталонную презентацию. Сгенерируй подробные инструкции для HeadAgent: {prompt}",
         )
 
         style_output: StyleOutput = style_message.content
 
-        logger.debug(f'StyleAgent output:\n{json.dumps(style_output.model_dump(), indent=4, ensure_ascii=False)}')
+        logger.debug(
+            f"StyleAgent output:\n{json.dumps(style_output.model_dump(), indent=4, ensure_ascii=False)}"
+        )
 
-        pptx_agent.run(style_output.instructions)
+        pptx_agent.run("\n".join(style_output.instructions))
 
         return pr.to_bytes()

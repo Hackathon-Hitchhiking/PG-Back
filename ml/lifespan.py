@@ -21,7 +21,15 @@ open_sync_client = OpenAI(
     http_client=http_sync_client,
 )
 
-model_41 = OpenAIChat(id='gpt-4.1', client=open_sync_client, async_client=open_async_client, )
-model_4o = OpenAIChat(id='gpt-4o', client=open_sync_client, async_client=open_async_client)
+model_41 = OpenAIChat(
+    id="gpt-4.1",
+    client=open_sync_client,
+    async_client=open_async_client,
+)
+model_4o = OpenAIChat(
+    id="gpt-4o", client=open_sync_client, async_client=open_async_client
+)
 
-style_agent_model = OpenAIChat(id='gpt-4.1-mini', client=open_sync_client, async_client=open_async_client)
+style_agent_model = OpenAIChat(
+    id="gpt-4.1-mini", client=open_sync_client, async_client=open_async_client
+)
