@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, UploadFile, File, Depends, Form, Response
 from loguru import logger
 
-from schemas.chat import ChatResponse, ChatResponseWithMessages
+from schemas.chat import ChatResponse, ChatResponseWithMessages, MessageResponse
 from services.chat import ChatService
 
 router = APIRouter(prefix="/api/v1/chat", tags=["chat"])
@@ -47,10 +47,7 @@ async def add_message(
     message: str,
     history_id: uuid.UUID | None = None,
     chat_service: ChatService = Depends(),
-):
-    presentation = await chat_service.add_message(chat_id, history_id, message)
+) -> str:
+    await chat_service.add_message(chat_id, history_id, message)
 
-    return Response(
-        content=presentation,
-        media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    )
+    return "Success"

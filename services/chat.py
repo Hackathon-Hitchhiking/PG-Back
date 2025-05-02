@@ -96,7 +96,7 @@ class ChatService:
 
     async def add_message(
         self, chat_id: uuid.UUID, history_id: uuid.UUID | None, prompt: str
-    ) -> bytes:
+    ) -> Message:
         logger.debug("Chat - Service - add_message")
 
         message_id = uuid.uuid4()
@@ -114,7 +114,7 @@ class ChatService:
             chat_id, message_id, io.BytesIO(edited_pres)
         )
 
-        await self._message_repo.create(
+        message = await self._message_repo.create(
             Message(
                 id=message_id,
                 chat_id=chat_id,
@@ -123,4 +123,4 @@ class ChatService:
             )
         )
 
-        return edited_pres
+        return message
