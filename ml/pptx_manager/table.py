@@ -9,16 +9,16 @@ class TableManager:
 
     def load_presentation(self, file_path: str) -> str:
         self.pres = Presentation(file_path)
-        logger.info(f"Загружена презентация: {file_path}")
-        return f"Презентация успешно загружена: {file_path}"
+        logger.info(f'Загружена презентация: {file_path}')
+        return f'Презентация успешно загружена: {file_path}'
 
     def get_table_indexes(self, slide_num: int) -> list[int]:
         if not self.pres:
-            msg = "Презентация не загружена. Сначала используйте `load_presentation`."
+            msg = 'Презентация не загружена. Сначала используйте `load_presentation`.'
             raise ValueError(msg)
 
         if not (1 <= slide_num <= len(self.pres.slides)):
-            msg = f"Неверный номер слайда: {slide_num}"
+            msg = f'Неверный номер слайда: {slide_num}'
             raise ValueError(msg)
 
         slide = self.pres.slides[slide_num - 1]
@@ -26,7 +26,7 @@ class TableManager:
 
     def parse_tables(self) -> list[dict]:
         if not self.pres:
-            msg = "Презентация не загружена. Сначала используйте `load_presentation`."
+            msg = 'Презентация не загружена. Сначала используйте `load_presentation`.'
             raise ValueError(msg)
 
         tables = []
@@ -36,17 +36,14 @@ class TableManager:
                 table = slide.shapes[table_idx].table
                 tables.append(
                     {
-                        "slide_num": slide_num,
-                        "table_index": table_idx,
-                        "data": [
-                            [cell.text.strip() for cell in row.cells]
-                            for row in table.rows
-                        ],
+                        'slide_num': slide_num,
+                        'table_index': table_idx,
+                        'data': [[cell.text.strip() for cell in row.cells] for row in table.rows],
                     }
                 )
-                logger.debug(f"Parsed table on slide {slide_num}, index {table_idx}")
+                logger.debug(f'Parsed table on slide {slide_num}, index {table_idx}')
 
-        logger.info(f"Total tables parsed: {len(tables)}")
+        logger.info(f'Total tables parsed: {len(tables)}')
         return tables
 
     def create_table(
@@ -78,32 +75,26 @@ class TableManager:
         Raises:
             ValueError: Если презентация не загружена или параметры неверны.
         """
-        logger.debug(
-            f"Создание таблицы: слайд={slide_num}, строки={rows}, столбцы={cols}"
-        )
+        logger.debug(f'Создание таблицы: слайд={slide_num}, строки={rows}, столбцы={cols}')
 
         if not self.pres:
-            msg = "Презентация не загружена. Используйте метод load_presentation()."
+            msg = 'Презентация не загружена. Используйте метод load_presentation().'
             logger.error(msg)
             raise ValueError(msg)
 
         if not (1 <= slide_num <= len(self.pres.slides)):
-            msg = f"Недопустимый номер слайда: {slide_num}. Доступны слайды: 1-{len(self.pres.slides)}"
+            msg = f'Недопустимый номер слайда: {slide_num}. Доступны слайды: 1-{len(self.pres.slides)}'
             logger.error(msg)
             raise ValueError(msg)
 
         slide = self.pres.slides[slide_num - 1]
-        _ = slide.shapes.add_table(
-            rows, cols, Inches(left), Inches(top), Inches(width), Inches(height)
-        )
+        _ = slide.shapes.add_table(rows, cols, Inches(left), Inches(top), Inches(width), Inches(height))
         table_index = len(slide.shapes) - 1
 
-        logger.info(f"Создана таблица {rows}x{cols} на слайде {slide_num}")
-        return f"Создана таблица размером {rows}x{cols} на слайде {slide_num} (индекс: {table_index})"
+        logger.info(f'Создана таблица {rows}x{cols} на слайде {slide_num}')
+        return f'Создана таблица размером {rows}x{cols} на слайде {slide_num} (индекс: {table_index})'
 
-    def update_cell(
-        self, slide_num: int, table_index: int, row: int, col: int, text: str
-    ) -> str:
+    def update_cell(self, slide_num: int, table_index: int, row: int, col: int, text: str) -> str:
         """Обновляет содержимое определенной ячейки в таблице.
 
         Изменяет текстовое содержимое указанной ячейки в таблице на заданном слайде.
@@ -122,12 +113,10 @@ class TableManager:
             ValueError: Если презентация не загружена или параметры недействительны.
             IndexError: Если индексы строки или столбца выходят за пределы таблицы.
         """
-        logger.debug(
-            f"Обновление ячейки: слайд={slide_num}, таблица={table_index}, строка={row}, столбец={col}"
-        )
+        logger.debug(f'Обновление ячейки: слайд={slide_num}, таблица={table_index}, строка={row}, столбец={col}')
 
         if not self.pres:
-            msg = "Презентация не загружена. Используйте метод load_presentation()"
+            msg = 'Презентация не загружена. Используйте метод load_presentation()'
             logger.error(msg)
             raise ValueError(msg) from None
 
@@ -135,14 +124,14 @@ class TableManager:
         shape = slide.shapes[table_index]
 
         if not shape.has_table:
-            msg = f"Фигура с индексом {table_index} не является таблицей"
+            msg = f'Фигура с индексом {table_index} не является таблицей'
             logger.error(msg)
             raise ValueError(msg)
 
         table = shape.table
 
         if row >= len(table.rows) or col >= len(table.columns):
-            msg = f"Индексы выходят за пределы таблицы: строка={row}, столбец={col}"
+            msg = f'Индексы выходят за пределы таблицы: строка={row}, столбец={col}'
             logger.error(msg)
             raise IndexError(msg)
 
@@ -151,23 +140,21 @@ class TableManager:
         cell.text_frame.clear()
         cell.text_frame.paragraphs[0].text = text
 
-        logger.info(
-            f"Обновлена ячейка [{row},{col}] в таблице {table_index} на слайде {slide_num}"
-        )
+        logger.info(f'Обновлена ячейка [{row},{col}] в таблице {table_index} на слайде {slide_num}')
         return (
-            f"На слайде {slide_num} в таблице {table_index} обновлена ячейка [{row},{col}]. "
+            f'На слайде {slide_num} в таблице {table_index} обновлена ячейка [{row},{col}]. '
             f'Старый текст: "{old_text}", новый текст: "{text}"'
         )
 
     def save_presentation(self, file_path: str) -> str:
         if not self.pres:
-            msg = "Презентация не загружена. Используйте метод load_presentation()"
+            msg = 'Презентация не загружена. Используйте метод load_presentation()'
             logger.error(msg)
             raise ValueError(msg)
 
         self.pres.save(file_path)
-        logger.info(f"Презентация сохранена: {file_path}")
-        return f"Презентация успешно сохранена в файл: {file_path}"
+        logger.info(f'Презентация сохранена: {file_path}')
+        return f'Презентация успешно сохранена в файл: {file_path}'
 
     def test(self, source: str | None) -> None:
         try:
@@ -175,7 +162,7 @@ class TableManager:
 
             existing_tables = self.parse_tables()
 
-            logger.info(f"Found {len(existing_tables)} existing tables")
+            logger.info(f'Found {len(existing_tables)} existing tables')
 
             new_table_message = self.create_table(1, 3, 4)
             logger.info(new_table_message)
@@ -183,28 +170,26 @@ class TableManager:
             if existing_tables:
                 first_table = existing_tables[0]
                 update_message = self.update_cell(
-                    first_table["slide_num"],
-                    first_table["table_index"],
+                    first_table['slide_num'],
+                    first_table['table_index'],
                     0,
                     0,
-                    "Обновились или я тебя удалю, это будет больно",
+                    'Обновились или я тебя удалю, это будет больно',
                 )
                 logger.info(update_message)
 
-            update_message = self.update_cell(
-                1, len(self.pres.slides[0].shapes) - 1, 0, 0, "New Table Content"
-            )
+            update_message = self.update_cell(1, len(self.pres.slides[0].shapes) - 1, 0, 0, 'New Table Content')
             logger.info(update_message)
 
-            save_message = self.save_presentation("test_table.pptx")
+            save_message = self.save_presentation('test_table.pptx')
             logger.info(save_message)
 
-            logger.success("Тест успешно завершен.")
+            logger.success('Тест успешно завершен.')
 
         except Exception as e:
-            logger.error(f"Тест завершился с ошибкой: {str(e)}")
+            logger.error(f'Тест завершился с ошибкой: {str(e)}')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     tm = TableManager()
-    tm.test("../test_data/test_dit.pptx")
+    tm.test('../test_data/test_dit.pptx')

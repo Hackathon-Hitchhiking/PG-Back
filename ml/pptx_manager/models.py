@@ -8,17 +8,17 @@ from pydantic import BaseModel
 
 
 class TextAlign(str, Enum):
-    LEFT = "left"
-    CENTER = "center"
-    RIGHT = "right"
-    JUSTIFY = "justify"
-    DISTRIBUTE = "distribute"
+    LEFT = 'left'
+    CENTER = 'center'
+    RIGHT = 'right'
+    JUSTIFY = 'justify'
+    DISTRIBUTE = 'distribute'
 
 
 class TextVerticalAlign(str, Enum):
-    TOP = "top"
-    MIDDLE = "middle"
-    BOTTOM = "bottom"
+    TOP = 'top'
+    MIDDLE = 'middle'
+    BOTTOM = 'bottom'
 
 
 class TextFrameShape(BaseModel):

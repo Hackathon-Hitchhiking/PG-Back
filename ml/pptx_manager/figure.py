@@ -4,8 +4,10 @@ from collections.abc import Iterator
 from loguru import logger
 from pptx import Presentation
 from pptx.dml.color import RGBColor
-from pptx.enum.shapes import MSO_SHAPE_TYPE
-from pptx.shapes.autoshape import Shape, AutoShapeType
+from pptx.enum.dml import MSO_FILL_TYPE
+from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE, MSO_SHAPE_TYPE
+from pptx.shapes.autoshape import Shape
+from pptx.shapes.connector import Connector
 from pptx.slide import Slide
 from pptx.util import Emu
 from pydantic import BaseModel
@@ -41,7 +43,7 @@ class GeometricShape(BaseModel):
     transparency: float = 0.0
     rotation: float = 0.0
     adjustments: list[int] = []
-    shape_manager: Shape | None = None
+    shape_manager: Shape | Connector | None = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -66,7 +68,6 @@ class FigureManager:
 
     def load_presentation(self, source_path: str) -> None:
         self.pres = Presentation(source_path)
-        self._parse_existing_shapes()
 
     def create_presentation(self) -> None:
         self.pres = Presentation()
@@ -75,27 +76,22 @@ class FigureManager:
         if self.pres:
             self.pres.save(target_path)
         else:
-            raise ValueError("Презентация не загружена или не создана")
+            raise ValueError('Презентация не загружена или не создана')
 
     def get_figure_frame_json(self, slide_id: int) -> list[dict]:
-        return [
-            shape.model_dump(exclude={"shape_manager"})
-            for shape in self.figure_shapes[slide_id]
-        ]
+        return [shape.model_dump(exclude={'shape_manager'}) for shape in self.figure_shapes[slide_id]]
 
     def get_all_figure_frame_json(self) -> dict:
         figure_shape_json = {}
         for slide_id, shapes in self.figure_shapes.items():
             shapes_json = []
             for shape in shapes:
-                shapes_json.append(shape.model_dump(exclude={"shape_manager"}))
+                shapes_json.append(shape.model_dump(exclude={'shape_manager'}))
             figure_shape_json[slide_id] = shapes_json
 
         return figure_shape_json
 
-    def copy_figure_shape(
-        self, slide_id_from: int, shape_id: int, slide_id_to: int
-    ) -> str:
+    def copy_figure_shape(self, slide_id_from: int, shape_id: int, slide_id_to: int) -> str:
         """
         Копирует фигуру с одного слайда на другой.
 
@@ -108,12 +104,12 @@ class FigureManager:
             str: Сообщение о результате операции.
         """
         logger.debug(
-            f"Вызов copy_figure_shape с параметрами slide_id_from={slide_id_from}, shape_id={shape_id}, slide_id_to={slide_id_to}"
+            f'Вызов copy_figure_shape с параметрами slide_id_from={slide_id_from}, shape_id={shape_id}, slide_id_to={slide_id_to}'
         )
 
         shape = self._get_shape(slide_id_from, shape_id)
         if shape is None:
-            return f"Фигура (ID {shape_id}) не найдена на слайде {slide_id_from}."
+            return f'Фигура (ID {shape_id}) не найдена на слайде {slide_id_from}.'
 
         result = self.add_figure_shape(
             slide_id=slide_id_to,
@@ -131,7 +127,7 @@ class FigureManager:
             adjustments=shape.adjustments,
         )
 
-        return f"Фигура (shape_id={shape_id}) успешно скопирована со слайда {slide_id_from} на слайд {slide_id_to}. {result}"
+        return f'Фигура (shape_id={shape_id}) успешно скопирована со слайда {slide_id_from} на слайд {slide_id_to}. {result}'
 
     def add_figure_shape(
         self,
@@ -163,7 +159,7 @@ class FigureManager:
             width (float): Ширина фигуры в пикселях.
             height (float): Высота фигуры в пикселях.
             color (list[int]): Цвет заливки фигуры в формате RGB (по умолчанию белый: [255, 255, 255]).
-            line_color (list[int]): Цвет контура фигуры в формате RGB (по умолчанию черный: (0, 0, 0)).
+            line_color (list[int]): Цвет контура фигуры в формате RGB (по умолчанию черный: (0, 0, 0)), если цвет не указан передавай (0, 0, 0).
             line_width (float): Толщина контура фигуры в пикселях (по умолчанию 1.0).
             rounding (float): Значение закругления углов прямоугольника от 0.0 до 1.0 (по умолчанию 0.0).
             transparency (float): Прозрачность фигуры от 0.0 до 1.0 (по умолчанию 0.0).
@@ -181,14 +177,14 @@ class FigureManager:
             color = [255, 255, 255]
 
         logger.debug(
-            f"add_figure_shape calls with parameters: {slide_id, shape_type, left, top, width, height, color, line_color, line_width, rounding, transparency, rotation, adjustments}"
+            f'add_figure_shape calls with parameters: {slide_id, shape_type, left, top, width, height, color, line_color, line_width, rounding, transparency, rotation, adjustments}'
         )
 
         if not self.pres:
-            raise ValueError("Презентация не загружена или не создана")
+            raise ValueError('Презентация не загружена или не создана')
 
         if slide_id <= 0 or slide_id > len(self.pres.slides):
-            raise ValueError(f"Неверный ID слайда: {slide_id}")
+            raise ValueError(f'Неверный ID слайда: {slide_id}')
 
         slide = self.pres.slides[slide_id - 1]
 
@@ -197,9 +193,7 @@ class FigureManager:
         width_emu = Emu(px_to_emu(width))
         height_emu = Emu(px_to_emu(height))
 
-        shape = slide.shapes.add_shape(
-            shape_type, left_emu, top_emu, width_emu, height_emu
-        )
+        shape = slide.shapes.add_shape(shape_type, left_emu, top_emu, width_emu, height_emu)
 
         self.shape_id_counter[slide_id] += 1
         shape_id = self.shape_id_counter[slide_id]
@@ -235,11 +229,9 @@ class FigureManager:
         )
 
         self.figure_shapes[slide_id].append(geometric_shape)
-        return "Success"
+        return 'Success'
 
-    def update_shape(
-        self, slide_id: int, shape_id: int, opts: ShapeOpts | dict
-    ) -> None:
+    def update_shape(self, slide_id: int, shape_id: int, opts: ShapeOpts | dict) -> None:
         """
         Обновляет свойства существующей фигуры.
 
@@ -271,14 +263,9 @@ class FigureManager:
 
         shape = self._get_shape_by_id(slide_id, shape_id)
         if not shape:
-            raise ValueError(f"Фигура с ID {shape_id} не найдена на слайде {slide_id}")
+            raise ValueError(f'Фигура с ID {shape_id} не найдена на слайде {slide_id}')
 
-        if (
-            opts.left is not None
-            or opts.top is not None
-            or opts.width is not None
-            or opts.height is not None
-        ):
+        if opts.left is not None or opts.top is not None or opts.width is not None or opts.height is not None:
             self._update_shape_position(shape, opts)
 
         if opts.color is not None:
@@ -328,13 +315,11 @@ class FigureManager:
         Вызывает:
             ValueError: Если фигура с указанным ID не найдена на слайде.
         """
-        logger.debug(
-            f"update_shape_position calls with parameters: {slide_id, shape_id, left, top, width, height}"
-        )
+        logger.debug(f'update_shape_position calls with parameters: {slide_id, shape_id, left, top, width, height}')
 
         shape = self._get_shape_by_id(slide_id, shape_id)
         if not shape:
-            raise ValueError(f"Фигура с ID {shape_id} не найдена на слайде {slide_id}")
+            raise ValueError(f'Фигура с ID {shape_id} не найдена на слайде {slide_id}')
 
         ppt_shape = shape.shape_manager
 
@@ -354,9 +339,7 @@ class FigureManager:
             ppt_shape.height = Emu(px_to_emu(height))
             shape.height = height
 
-    def update_shape_color(
-        self, slide_id: int, shape_id: int, color: list[int]
-    ) -> None:
+    def update_shape_color(self, slide_id: int, shape_id: int, color: list[int]) -> None:
         """
         Обновляет цвет заливки фигуры.
 
@@ -370,19 +353,15 @@ class FigureManager:
         Вызывает:
             ValueError: Если фигура с указанным ID не найдена на слайде.
         """
-        logger.debug(
-            f"update_shape_color calls with parameters: {slide_id, shape_id, color}"
-        )
+        logger.debug(f'update_shape_color calls with parameters: {slide_id, shape_id, color}')
 
         shape = self._get_shape_by_id(slide_id, shape_id)
         if not shape:
-            raise ValueError(f"Фигура с ID {shape_id} не найдена на слайде {slide_id}")
+            raise ValueError(f'Фигура с ID {shape_id} не найдена на слайде {slide_id}')
 
         self._update_shape_fill_color(shape, color)
 
-    def update_shape_line(
-        self, slide_id: int, shape_id: int, color: list[int] = None, width: float = None
-    ) -> None:
+    def update_shape_line(self, slide_id: int, shape_id: int, color: list[int] = None, width: float = None) -> None:
         """
         Обновляет свойства линии контура фигуры.
 
@@ -400,7 +379,7 @@ class FigureManager:
         """
         shape = self._get_shape_by_id(slide_id, shape_id)
         if not shape:
-            raise ValueError(f"Фигура с ID {shape_id} не найдена на слайде {slide_id}")
+            raise ValueError(f'Фигура с ID {shape_id} не найдена на слайде {slide_id}')
 
         if color is not None:
             self._update_shape_line_color(shape, color)
@@ -408,9 +387,7 @@ class FigureManager:
         if width is not None:
             self._update_shape_line_width(shape, width)
 
-    def update_shape_transparency(
-        self, slide_id: int, shape_id: int, transparency: float
-    ) -> None:
+    def update_shape_transparency(self, slide_id: int, shape_id: int, transparency: float) -> None:
         """
         Обновляет прозрачность фигуры.
 
@@ -424,24 +401,18 @@ class FigureManager:
         Вызывает:
             ValueError: Если фигура с указанным ID не найдена на слайде или значение прозрачности вне диапазона.
         """
-        logger.debug(
-            f"update_shape_transparency calls with parameters: {slide_id, shape_id, transparency}"
-        )
+        logger.debug(f'update_shape_transparency calls with parameters: {slide_id, shape_id, transparency}')
 
         if not 0.0 <= transparency <= 1.0:
-            raise ValueError(
-                "Значение прозрачности должно быть в диапазоне от 0.0 до 1.0"
-            )
+            raise ValueError('Значение прозрачности должно быть в диапазоне от 0.0 до 1.0')
 
         shape = self._get_shape_by_id(slide_id, shape_id)
         if not shape:
-            raise ValueError(f"Фигура с ID {shape_id} не найдена на слайде {slide_id}")
+            raise ValueError(f'Фигура с ID {shape_id} не найдена на слайде {slide_id}')
 
         self._update_shape_transparency(shape, transparency)
 
-    def update_shape_rotation(
-        self, slide_id: int, shape_id: int, rotation: float
-    ) -> None:
+    def update_shape_rotation(self, slide_id: int, shape_id: int, rotation: float) -> None:
         """
         Обновляет поворот фигуры.
 
@@ -457,13 +428,11 @@ class FigureManager:
         """
         shape = self._get_shape_by_id(slide_id, shape_id)
         if not shape:
-            raise ValueError(f"Фигура с ID {shape_id} не найдена на слайде {slide_id}")
+            raise ValueError(f'Фигура с ID {shape_id} не найдена на слайде {slide_id}')
 
         self._update_shape_rotation(shape, rotation)
 
-    def set_shape_rounding(
-        self, slide_id: int, shape_id: int, rounding_value: float
-    ) -> None:
+    def set_shape_rounding(self, slide_id: int, shape_id: int, rounding_value: float) -> None:
         """
         Sets the rounding value for a shape.
 
@@ -483,16 +452,14 @@ class FigureManager:
             ValueError: If the shape with the specified ID is not found on the slide or
                     the rounding value is outside the valid range.
         """
-        logger.debug(
-            f"set_shape_rounding calls with parameters: {slide_id, shape_id, rounding_value}"
-        )
+        logger.debug(f'set_shape_rounding calls with parameters: {slide_id, shape_id, rounding_value}')
 
         if not 0.0 <= rounding_value <= 1.0:
-            raise ValueError("Rounding value must be between 0.0 and 1.0")
+            raise ValueError('Rounding value must be between 0.0 and 1.0')
 
         shape = self._get_shape_by_id(slide_id, shape_id)
         if not shape:
-            raise ValueError(f"Shape with ID {shape_id} not found on slide {slide_id}")
+            raise ValueError(f'Shape with ID {shape_id} not found on slide {slide_id}')
 
         ppt_shape = shape.shape_manager
 
@@ -501,10 +468,7 @@ class FigureManager:
 
         try:
             # Check if the shape has adjustment values and can be rounded
-            if (
-                hasattr(ppt_shape, "adjustment_values")
-                and len(ppt_shape.adjustment_values) > 0
-            ):
+            if hasattr(ppt_shape, 'adjustment_values') and len(ppt_shape.adjustment_values) > 0:
                 ppt_shape.adjustment_values[0] = adj_value
 
                 # Update our internal representation
@@ -513,13 +477,11 @@ class FigureManager:
                 else:
                     shape.adjustments[0] = adj_value
 
-                logger.info(
-                    f"Successfully set rounding {rounding_value} for shape with ID {shape_id}"
-                )
+                logger.info(f'Successfully set rounding {rounding_value} for shape with ID {shape_id}')
                 return
 
             # Alternative way to access adjustments
-            if hasattr(ppt_shape, "adjustments") and ppt_shape.adjustments:
+            if hasattr(ppt_shape, 'adjustments') and ppt_shape.adjustments:
                 ppt_shape.adjustments[0] = adj_value
 
                 # Update our internal representation
@@ -528,28 +490,22 @@ class FigureManager:
                 else:
                     shape.adjustments[0] = adj_value
 
-                logger.info(
-                    f"Successfully set rounding {rounding_value} for shape with ID {shape_id}"
-                )
+                logger.info(f'Successfully set rounding {rounding_value} for shape with ID {shape_id}')
                 return
 
             # If we get here, the shape doesn't support rounding
-            shape_type_name = "unknown"
-            if hasattr(ppt_shape, "auto_shape_type"):
-                shape_type_name = (
-                    f"{ppt_shape.auto_shape_type} ({ppt_shape.auto_shape_type.value})"
-                )
+            shape_type_name = 'unknown'
+            if hasattr(ppt_shape, 'auto_shape_type'):
+                shape_type_name = f'{ppt_shape.auto_shape_type} ({ppt_shape.auto_shape_type.value})'
 
-            logger.info(
-                f"Shape type {shape_type_name} does not support rounding. Operation skipped."
-            )
+            logger.info(f'Shape type {shape_type_name} does not support rounding. Operation skipped.')
 
         except IndexError:
             logger.info(
-                "Shape does not have adjustment settings for rounding (no element with index 0). Operation skipped."
+                'Shape does not have adjustment settings for rounding (no element with index 0). Operation skipped.'
             )
         except Exception as e:
-            logger.warning(f"Failed to set rounding: {str(e)}")
+            logger.warning(f'Failed to set rounding: {str(e)}')
 
     def delete_shape(self, slide_id: int, shape_id: int) -> None:
         """
@@ -567,7 +523,7 @@ class FigureManager:
         """
         shape = self._get_shape_by_id(slide_id, shape_id)
         if not shape:
-            raise ValueError(f"Фигура с ID {shape_id} не найдена на слайде {slide_id}")
+            raise ValueError(f'Фигура с ID {shape_id} не найдена на слайде {slide_id}')
 
         sp = shape.shape_manager._element
         sp.getparent().remove(sp)
@@ -596,8 +552,8 @@ class FigureManager:
             shape = self._get_shape_by_id(slide_id, shape_id)
             if not shape:
                 return {}
-            return shape.dict(exclude={"shape_manager"})
-        return [s.dict(exclude={"shape_manager"}) for s in self.figure_shapes[slide_id]]
+            return shape.dict(exclude={'shape_manager'})
+        return [s.dict(exclude={'shape_manager'}) for s in self.figure_shapes[slide_id]]
 
     def get_all_shapes_json(self) -> dict[int, list[dict]]:
         """
@@ -611,7 +567,7 @@ class FigureManager:
         """
         result = {}
         for slide_id, shapes_list in self.figure_shapes.items():
-            result[slide_id] = [s.dict(exclude={"shape_manager"}) for s in shapes_list]
+            result[slide_id] = [s.dict(exclude={'shape_manager'}) for s in shapes_list]
         return result
 
     def get_shape_ids(self, slide_id: int) -> list[int]:
@@ -663,90 +619,88 @@ class FigureManager:
             dict: Словарь со всеми свойствами фигуры.
         """
         properties = {
-            "left": ppt_shape.left,
-            "top": ppt_shape.top,
-            "width": ppt_shape.width,
-            "height": ppt_shape.height,
-            "rotation": ppt_shape.rotation if hasattr(ppt_shape, "rotation") else 0,
+            'left': ppt_shape.left,
+            'top': ppt_shape.top,
+            'width': ppt_shape.width,
+            'height': ppt_shape.height,
+            'rotation': ppt_shape.rotation if hasattr(ppt_shape, 'rotation') else 0,
         }
 
         # Сохраняем свойства заливки
-        if hasattr(ppt_shape, "fill"):
+        if hasattr(ppt_shape, 'fill'):
             fill_props = {}
-            if hasattr(ppt_shape.fill, "fore_color") and ppt_shape.fill.fore_color:
-                fill_props["fore_color"] = ppt_shape.fill.fore_color.rgb
-            if hasattr(ppt_shape.fill, "back_color") and ppt_shape.fill.back_color:
-                fill_props["back_color"] = ppt_shape.fill.back_color.rgb
-            if hasattr(ppt_shape.fill, "transparency"):
-                fill_props["transparency"] = ppt_shape.fill.transparency
-            if hasattr(ppt_shape.fill, "type"):
-                fill_props["type"] = ppt_shape.fill.type
-            properties["fill"] = fill_props
+            if hasattr(ppt_shape.fill, 'fore_color') and ppt_shape.fill.fore_color:
+                fill_props['fore_color'] = ppt_shape.fill.fore_color.rgb
+            if hasattr(ppt_shape.fill, 'back_color') and ppt_shape.fill.back_color:
+                fill_props['back_color'] = ppt_shape.fill.back_color.rgb
+            if hasattr(ppt_shape.fill, 'transparency'):
+                fill_props['transparency'] = ppt_shape.fill.transparency
+            if hasattr(ppt_shape.fill, 'type'):
+                fill_props['type'] = ppt_shape.fill.type
+            properties['fill'] = fill_props
 
-        if hasattr(ppt_shape, "line"):
+        if hasattr(ppt_shape, 'line'):
             line_props = {}
-            if hasattr(ppt_shape.line, "color") and ppt_shape.line.color:
-                line_props["color"] = ppt_shape.line.color.rgb
-            if hasattr(ppt_shape.line, "width"):
-                line_props["width"] = ppt_shape.line.width
-            if hasattr(ppt_shape.line, "dash_style"):
-                line_props["dash_style"] = ppt_shape.line.dash_style
-            properties["line"] = line_props
+            if hasattr(ppt_shape.line, 'color') and ppt_shape.line.color:
+                line_props['color'] = ppt_shape.line.color.rgb
+            if hasattr(ppt_shape.line, 'width'):
+                line_props['width'] = ppt_shape.line.width
+            if hasattr(ppt_shape.line, 'dash_style'):
+                line_props['dash_style'] = ppt_shape.line.dash_style
+            properties['line'] = line_props
 
-        if hasattr(ppt_shape, "text") and ppt_shape.text:
-            properties["text"] = ppt_shape.text
-            if hasattr(ppt_shape, "text_frame") and ppt_shape.text_frame.paragraphs:
+        if hasattr(ppt_shape, 'text') and ppt_shape.text:
+            properties['text'] = ppt_shape.text
+            if hasattr(ppt_shape, 'text_frame') and ppt_shape.text_frame.paragraphs:
                 text_props = []
                 for p in ppt_shape.text_frame.paragraphs:
                     p_props = {
-                        "text": p.text,
-                        "alignment": p.alignment if hasattr(p, "alignment") else None,
-                        "runs": [],
+                        'text': p.text,
+                        'alignment': p.alignment if hasattr(p, 'alignment') else None,
+                        'runs': [],
                     }
                     for run in p.runs:
-                        run_props = {"text": run.text}
-                        if hasattr(run, "font"):
+                        run_props = {'text': run.text}
+                        if hasattr(run, 'font'):
                             font_props = {}
-                            if hasattr(run.font, "color") and run.font.color:
-                                font_props["color"] = run.font.color.rgb
-                            if hasattr(run.font, "size"):
-                                font_props["size"] = run.font.size
-                            if hasattr(run.font, "bold"):
-                                font_props["bold"] = run.font.bold
-                            if hasattr(run.font, "italic"):
-                                font_props["italic"] = run.font.italic
-                            if hasattr(run.font, "underline"):
-                                font_props["underline"] = run.font.underline
-                            run_props["font"] = font_props
-                        p_props["runs"].append(run_props)
+                            if hasattr(run.font, 'color') and run.font.color:
+                                font_props['color'] = run.font.color.rgb
+                            if hasattr(run.font, 'size'):
+                                font_props['size'] = run.font.size
+                            if hasattr(run.font, 'bold'):
+                                font_props['bold'] = run.font.bold
+                            if hasattr(run.font, 'italic'):
+                                font_props['italic'] = run.font.italic
+                            if hasattr(run.font, 'underline'):
+                                font_props['underline'] = run.font.underline
+                            run_props['font'] = font_props
+                        p_props['runs'].append(run_props)
                     text_props.append(p_props)
-                properties["text_frame"] = text_props
+                properties['text_frame'] = text_props
 
         return properties
 
     def _apply_shape_properties_from_dict(self, ppt_shape, properties: dict) -> None:
-        if "rotation" in properties and hasattr(ppt_shape, "rotation"):
-            ppt_shape.rotation = properties["rotation"]
+        if 'rotation' in properties and hasattr(ppt_shape, 'rotation'):
+            ppt_shape.rotation = properties['rotation']
 
-        if "fill" in properties and hasattr(ppt_shape, "fill"):
-            fill_props = properties["fill"]
-            if "type" in fill_props and fill_props["type"] != 0:
+        if 'fill' in properties and hasattr(ppt_shape, 'fill'):
+            fill_props = properties['fill']
+            if 'type' in fill_props and fill_props['type'] != 0:
                 ppt_shape.fill.solid()
-                if "fore_color" in fill_props and hasattr(ppt_shape.fill, "fore_color"):
-                    ppt_shape.fill.fore_color.rgb = fill_props["fore_color"]
-                if "transparency" in fill_props and hasattr(
-                    ppt_shape.fill, "transparency"
-                ):
-                    ppt_shape.fill.transparency = fill_props["transparency"]
+                if 'fore_color' in fill_props and hasattr(ppt_shape.fill, 'fore_color'):
+                    ppt_shape.fill.fore_color.rgb = fill_props['fore_color']
+                if 'transparency' in fill_props and hasattr(ppt_shape.fill, 'transparency'):
+                    ppt_shape.fill.transparency = fill_props['transparency']
 
-        if "line" in properties and hasattr(ppt_shape, "line"):
-            line_props = properties["line"]
-            if "color" in line_props and hasattr(ppt_shape.line, "color"):
-                ppt_shape.line.color.rgb = line_props["color"]
-            if "width" in line_props and hasattr(ppt_shape.line, "width"):
-                ppt_shape.line.width = line_props["width"]
-            if "dash_style" in line_props and hasattr(ppt_shape.line, "dash_style"):
-                ppt_shape.line.dash_style = line_props["dash_style"]
+        if 'line' in properties and hasattr(ppt_shape, 'line'):
+            line_props = properties['line']
+            if 'color' in line_props and hasattr(ppt_shape.line, 'color'):
+                ppt_shape.line.color.rgb = line_props['color']
+            if 'width' in line_props and hasattr(ppt_shape.line, 'width'):
+                ppt_shape.line.width = line_props['width']
+            if 'dash_style' in line_props and hasattr(ppt_shape.line, 'dash_style'):
+                ppt_shape.line.dash_style = line_props['dash_style']
 
     def _get_slide_by_id(self, slide_id: int) -> Slide | None:
         """
@@ -767,89 +721,114 @@ class FigureManager:
         return self.pres.slides[slide_id - 1]
 
     def _parse_existing_shapes(self) -> None:
-        """
-        Анализирует существующие фигуры из загруженной презентации.
-
-        Проходит по всем слайдам и фигурам в загруженной презентации,
-        создает для них объекты GeometricShape и добавляет их в коллекцию фигур менеджера.
-        """
         if not self.pres:
             return
 
         for slide_idx, slide in enumerate(self.pres.slides, 1):
             shape_idx = 1
             for shape in slide.shapes:
+                # Расширенная обработка линий и коннекторов
                 if shape.shape_type == MSO_SHAPE_TYPE.AUTO_SHAPE:
                     self._parse_figure_shape(slide_idx, shape_idx, shape)
                     shape_idx += 1
-                    self.shape_id_counter[slide_idx] = max(
-                        self.shape_id_counter[slide_idx], shape_idx
-                    )
+                elif shape.shape_type == MSO_SHAPE_TYPE.LINE or isinstance(shape, Connector):
+                    logger.debug(f'Обнаружена линия/коннектор: {shape.shape_type}')
+                    self._parse_line_shape(slide_idx, shape_idx, shape)
+                    shape_idx += 1
+                self.shape_id_counter[slide_idx] = max(self.shape_id_counter.get(slide_idx, 0), shape_idx)
 
-    def _parse_figure_shape(
-        self, slide_id: int, shape_id: int, shape: Shape
-    ) -> GeometricShape | None:
+    def _parse_figure_shape(self, slide_id: int, shape_id: int, shape: Shape) -> GeometricShape | None:
         """
         Анализирует фигуру из презентации и добавляет ее в коллекцию.
-
-        Извлекает все свойства фигуры, создает объект GeometricShape
-        и добавляет его в коллекцию фигур менеджера.
-
-        Аргументы:
-            slide_id (int): ID слайда, содержащего фигуру.
-            shape_id (int): ID фигуры.
-            shape (Shape): Объект фигуры из python-pptx.
-
-        Возвращает:
-            Optional[GeometricShape]: Созданный объект фигуры или None в случае ошибки.
         """
+
         try:
             left = emu_to_px(shape.left)
             top = emu_to_px(shape.top)
             width = emu_to_px(shape.width)
             height = emu_to_px(shape.height)
+            shape_type = shape.auto_shape_type if shape.shape_type == MSO_SHAPE_TYPE.AUTO_SHAPE else shape.shape_type
 
-            fill_color = [0, 0, 0]
-            try:
-                if hasattr(shape.fill, "fore_color") and shape.fill.type != 0:
-                    fill_color = tuple(shape.fill.fore_color.rgb)
-            except Exception:
-                pass
+            TRAPEZOID_TYPES = {
+                MSO_AUTO_SHAPE_TYPE.TRAPEZOID,
+                MSO_AUTO_SHAPE_TYPE.NON_ISOSCELES_TRAPEZOID,
+                MSO_SHAPE_TYPE.FREEFORM,
+            }
 
-            line_color = (0, 0, 0)
-            try:
-                if hasattr(shape.line, "color") and shape.line.color is not None:
-                    line_color = tuple(shape.line.color.rgb)  ## CHANGE
-            except Exception:
-                pass
+            # Определяем тип фигуры
+            is_pentagon = shape_type == MSO_AUTO_SHAPE_TYPE.PENTAGON
+            is_circle = shape_type in [MSO_AUTO_SHAPE_TYPE.OVAL]
+            is_trapezoid = shape_type in TRAPEZOID_TYPES
+            is_rounded_rectangle = shape_type == MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE
+            is_diamond = shape_type == MSO_AUTO_SHAPE_TYPE.DIAMOND
+            is_right_arrow = shape_type == MSO_AUTO_SHAPE_TYPE.RIGHT_ARROW
+            is_hexagon = shape_type == MSO_AUTO_SHAPE_TYPE.HEXAGON
 
-            line_width = 1.0
+            fill_color = None
             try:
-                if hasattr(shape.line, "width") and shape.line.width is not None:
+                fill = shape.fill
+                if fill.type == MSO_FILL_TYPE.SOLID:
+                    if fill.fore_color and fill.fore_color.rgb is not None:
+                        fill_color = tuple(fill.fore_color.rgb)
+                    # Если цвет задан через тему, можно попробовать:
+                    elif fill.fore_color.type == 2:  # THEME
+                        # Можно попробовать получить RGB через fill.fore_color.theme_color
+                        fill_color = [255, 255, 255]  # или другой дефолт
+                else:
+                    fill_color = [255, 255, 255]  # Нет заливки
+            except Exception as e:
+                logger.debug(f'Не удалось получить цвет заливки: {e}')
+                fill_color = None
+
+            line_color = None
+            try:
+                line = shape.line
+                if line.fill.type == MSO_FILL_TYPE.SOLID and line.color and line.color.rgb is not None:
+                    line_color = tuple(line.color.rgb)
+                else:
+                    line_color = [255, 255, 255]
+            except Exception as e:
+                logger.debug(f'Не удалось получить цвет линии: {e}')
+                line_color = [255, 255, 255]
+
+            line_width = 0.0
+            try:
+                if hasattr(shape.line, 'width') and shape.line.width is not None:
                     line_width = emu_to_px(shape.line.width)
             except Exception as e:
-                logger.debug(f"Не удалось получить ширину линии: {e}")
+                logger.debug(f'Не удалось получить ширину линии: {e}')
 
             adjustments = []
             try:
-                if hasattr(shape, "adjustment_values") and shape.adjustment_values:
+                if hasattr(shape, 'adjustment_values') and shape.adjustment_values:
                     adjustments = list(shape.adjustment_values)
             except Exception as e:
-                logger.debug(f"Не удалось получить настройки формы: {e}")
+                logger.debug(f'Не удалось получить настройки формы: {e}')
 
-            # Extract rounding value from adjustments if available
             rounding = 0.0
             try:
                 if adjustments and len(adjustments) > 0:
-                    # Convert from PowerPoint's scale (0-100000) to normalized scale (0.0-1.0)
-                    rounding = adjustments[0] / 100000.0
+                    if (
+                        is_pentagon
+                        or is_trapezoid
+                        or is_rounded_rectangle
+                        or is_diamond
+                        or is_right_arrow
+                        or is_hexagon
+                    ):
+                        # Для этих фигур используем первое значение adjustments, если оно есть
+                        rounding = adjustments[0] / 100000.0
+                    elif is_circle:
+                        rounding = 0.0
+                    else:
+                        rounding = adjustments[0] / 100000.0
             except Exception as e:
-                logger.debug(f"Не удалось получить значение скругления: {e}")
+                logger.debug(f'Не удалось получить значение скругления: {e}')
 
             geometric_shape = GeometricShape(
                 shape_id=shape_id,
                 slide_id=slide_id,
-                shape_type=shape.auto_shape_type,
+                shape_type=shape_type,
                 left=left,
                 top=top,
                 width=width,
@@ -866,7 +845,57 @@ class FigureManager:
             return geometric_shape
 
         except Exception as e:
-            logger.warning(f"Ошибка при анализе фигуры: {e}")
+            logger.warning(f'Ошибка при анализе фигуры: {e}')
+            return None
+
+    def _parse_line_shape(self, slide_id: int, shape_id: int, shape: Shape) -> GeometricShape | None:
+        """
+        Анализирует линию из презентации и добавляет ее в коллекцию.
+        """
+        try:
+            left = emu_to_px(shape.left)
+            top = emu_to_px(shape.top)
+            width = emu_to_px(shape.width)
+            height = emu_to_px(shape.height)
+
+            if shape.shape_type != MSO_SHAPE_TYPE.LINE:
+                return None
+
+            line_color = (0, 0, 0)
+            try:
+                if hasattr(shape.line, 'color') and shape.line.color is not None:
+                    line_color = tuple(shape.line.color.rgb)
+            except Exception:
+                pass
+
+            line_width = 0.0
+            try:
+                if hasattr(shape.line, 'width') and shape.line.width is not None:
+                    line_width = emu_to_px(shape.line.width)
+            except Exception as e:
+                logger.debug(f'Не удалось получить ширину линии: {e}')
+
+            geometric_shape = GeometricShape(
+                shape_id=shape_id,
+                slide_id=slide_id,
+                shape_type=MSO_SHAPE_TYPE.LINE,
+                left=left,
+                top=top,
+                width=width,
+                height=height,
+                color=[0, 0, 0],
+                line_color=line_color,
+                line_width=line_width,
+                adjustments=[],
+                rounding=0.0,
+                shape_manager=shape,
+            )
+
+            self.figure_shapes[slide_id].append(geometric_shape)
+            return geometric_shape
+
+        except Exception as e:
+            logger.warning(f'Ошибка при анализе линии: {e}')
             return None
 
     def _get_shape_by_id(self, slide_id: int, shape_id: int) -> GeometricShape | None:
@@ -914,9 +943,7 @@ class FigureManager:
         """
         return self._get_shape_by_id(slide_id, shape_id)
 
-    def _get_shapes(
-        self, slide_id: int, shape_id: int | None = None
-    ) -> Iterator[GeometricShape]:
+    def _get_shapes(self, slide_id: int, shape_id: int | None = None) -> Iterator[GeometricShape]:
         """
         Получает фигуры с определенного слайда, опционально фильтруя по ID фигуры.
 
@@ -944,67 +971,64 @@ class FigureManager:
         """
         ppt_shape = shape.shape_manager
 
-        if "color" in kwargs and kwargs["color"] is not None:
-            color = kwargs["color"]
+        if 'color' in kwargs and kwargs['color'] is not None:
+            color = kwargs['color']
             try:
                 ppt_shape.fill.solid()
                 ppt_shape.fill.fore_color.rgb = RGBColor(*color)
                 shape.color = color
             except Exception as e:
-                logger.warning(f"Не удалось установить цвет заливки: {e}")
+                logger.warning(f'Не удалось установить цвет заливки: {e}')
 
-        if "line_color" in kwargs and kwargs["line_color"] is not None:
-            line_color = kwargs["line_color"]
+        if 'line_color' in kwargs and kwargs['line_color'] is not None:
+            line_color = kwargs['line_color']
             try:
                 ppt_shape.line.color.rgb = RGBColor(*line_color)
                 shape.line_color = line_color
             except Exception as e:
-                logger.warning(f"Не удалось установить цвет линии: {e}")
+                logger.warning(f'Не удалось установить цвет линии: {e}')
 
-        if "line_width" in kwargs and kwargs["line_width"] is not None:
-            line_width = kwargs["line_width"]
+        if 'line_width' in kwargs and kwargs['line_width'] is not None:
+            line_width = kwargs['line_width']
             try:
                 ppt_shape.line.width = Emu(px_to_emu(line_width))
                 shape.line_width = line_width
             except Exception as e:
-                logger.warning(f"Не удалось установить ширину линии: {e}")
+                logger.warning(f'Не удалось установить ширину линии: {e}')
 
-        if "transparency" in kwargs and kwargs["transparency"] is not None:
-            transparency = kwargs["transparency"]
+        if 'transparency' in kwargs and kwargs['transparency'] is not None:
+            transparency = kwargs['transparency']
             try:
-                if hasattr(ppt_shape.fill, "transparency"):
+                if hasattr(ppt_shape.fill, 'transparency'):
                     ppt_shape.fill.transparency = transparency
                 shape.transparency = transparency
             except Exception as e:
-                logger.warning(f"Не удалось установить прозрачность: {e}")
+                logger.warning(f'Не удалось установить прозрачность: {e}')
 
-        if "rotation" in kwargs and kwargs["rotation"] is not None:
-            rotation = kwargs["rotation"]
+        if 'rotation' in kwargs and kwargs['rotation'] is not None:
+            rotation = kwargs['rotation']
             try:
-                if hasattr(ppt_shape, "rotation"):
+                if hasattr(ppt_shape, 'rotation'):
                     ppt_shape.rotation = rotation
                 shape.rotation = rotation
             except Exception as e:
-                logger.warning(f"Не удалось установить поворот: {e}")
+                logger.warning(f'Не удалось установить поворот: {e}')
 
-        if "adjustments" in kwargs and kwargs["adjustments"]:
-            adjustments = kwargs["adjustments"]
+        if 'adjustments' in kwargs and kwargs['adjustments']:
+            adjustments = kwargs['adjustments']
             try:
-                if hasattr(ppt_shape, "adjustment_values"):
+                if hasattr(ppt_shape, 'adjustment_values'):
                     for i, value in enumerate(adjustments):
                         if i < len(ppt_shape.adjustment_values):
                             ppt_shape.adjustment_values[i] = value
                 shape.adjustments = adjustments
             except Exception as e:
-                logger.warning(f"Не удалось установить настройки формы: {e}")
+                logger.warning(f'Не удалось установить настройки формы: {e}')
 
-        if "rounding" in kwargs and kwargs["rounding"] is not None:
-            rounding = kwargs["rounding"]
+        if 'rounding' in kwargs and kwargs['rounding'] is not None:
+            rounding = kwargs['rounding']
             try:
-                if (
-                    hasattr(ppt_shape, "adjustment_values")
-                    and len(ppt_shape.adjustment_values) > 0
-                ):
+                if hasattr(ppt_shape, 'adjustment_values') and len(ppt_shape.adjustment_values) > 0:
                     adj_value = int(rounding * 100000)
                     ppt_shape.adjustment_values[0] = adj_value
                     if not shape.adjustments:
@@ -1013,7 +1037,7 @@ class FigureManager:
                         shape.adjustments[0] = adj_value
                     shape.rounding = rounding
             except Exception as e:
-                logger.warning(f"Не удалось установить скругление: {e}")
+                logger.warning(f'Не удалось установить скругление: {e}')
 
     def _update_shape_position(self, shape: GeometricShape, opts: ShapeOpts) -> None:
         ppt_shape = shape.shape_manager
@@ -1041,7 +1065,7 @@ class FigureManager:
             ppt_shape.fill.fore_color.rgb = RGBColor(color[0], color[1], color[2])
             shape.color = color
         except Exception as e:
-            logger.warning(f"Не удалось обновить цвет заливки: {e}")
+            logger.warning(f'Не удалось обновить цвет заливки: {e}')
 
     def _update_shape_line_color(self, shape: GeometricShape, color: list[int]) -> None:
         ppt_shape = shape.shape_manager
@@ -1049,7 +1073,7 @@ class FigureManager:
             ppt_shape.line.color.rgb = RGBColor(color[0], color[1], color[2])
             shape.line_color = color
         except Exception as e:
-            logger.warning(f"Не удалось обновить цвет линии: {e}")
+            logger.warning(f'Не удалось обновить цвет линии: {e}')
 
     def _update_shape_line_width(self, shape: GeometricShape, width: float) -> None:
         ppt_shape = shape.shape_manager
@@ -1057,43 +1081,61 @@ class FigureManager:
             ppt_shape.line.width = Emu(px_to_emu(width))
             shape.line_width = width
         except Exception as e:
-            logger.warning(f"Не удалось обновить ширину линии: {e}")
+            logger.warning(f'Не удалось обновить ширину линии: {e}')
 
-    def _update_shape_transparency(
-        self, shape: GeometricShape, transparency: float
-    ) -> None:
+    def _update_shape_transparency(self, shape: GeometricShape, transparency: float) -> None:
         ppt_shape = shape.shape_manager
         try:
-            if hasattr(ppt_shape.fill, "transparency"):
+            if hasattr(ppt_shape.fill, 'transparency'):
                 ppt_shape.fill.transparency = transparency
             shape.transparency = transparency
         except Exception as e:
-            logger.warning(f"Не удалось обновить прозрачность: {e}")
+            logger.warning(f'Не удалось обновить прозрачность: {e}')
 
     def _update_shape_rotation(self, shape: GeometricShape, rotation: float) -> None:
         ppt_shape = shape.shape_manager
         try:
-            if hasattr(ppt_shape, "rotation"):
+            if hasattr(ppt_shape, 'rotation'):
                 ppt_shape.rotation = rotation
             shape.rotation = rotation
         except Exception as e:
-            logger.warning(f"Не удалось обновить поворот: {e}")
+            logger.warning(f'Не удалось обновить поворот: {e}')
 
-    def _update_shape_adjustments(
-        self, shape: GeometricShape, adjustments: list[int]
-    ) -> None:
+    def _update_shape_adjustments(self, shape: GeometricShape, adjustments: list[int]) -> None:
         ppt_shape = shape.shape_manager
         try:
-            if hasattr(ppt_shape, "adjustment_values"):
+            if hasattr(ppt_shape, 'adjustment_values'):
                 for i, value in enumerate(adjustments):
                     if i < len(ppt_shape.adjustment_values):
                         ppt_shape.adjustment_values[i] = value
 
             shape.adjustments = adjustments
         except Exception as e:
-            logger.warning(f"Не удалось обновить настройки формы: {e}")
+            logger.warning(f'Не удалось обновить настройки формы: {e}')
+
+    def test(self, source_path: str, target_path: str = 'test_output.pptx'):
+        self.load_presentation(source_path)
+        # self.delete_shape(1, 1)
+        # self.delete_shape(1, 3)
+        ## ДЛЯ КИРИЛЛА [update_shape_color, update_shape_position, update_shape_transparency, set_shape_rounding]
+
+        # self.update_shape_position(3, 1, rounding = 0.5, color=(255, 0, 255))
+        # self.update_shape_color(3, 1, color=(255, 255, 0))
+        # self.update_shape_line(new_slide_id, rect3.shape_id, color=(255, 0, 0), width=3.0)
+        # self.update_shape_transparency(3, 1, transparency=1)
+        # self.update_shape_transparency(3, rect1.shape_id, transparency=0.2)
+        # self.update_shape_rotation(2, 1, rotation=45.0)
+        # self.update_shape_rotation(2, 2, rotation=45.0)
+        # self.update_shape_rotation(2, 3, rotation=45.0)
+        # self.update_shape_rotation(2, 4, rotation=45.0)
+
+        # self.set_shape_rounding(3, 2, 0.5)
+        # self.set_shape_rounding(3, 1, 1)
+        # self.set_shape_rounding(3, 3, 0.1)
+
+        self.save_presentation(target_path)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     manager = FigureManager()
-    manager.test("test_data/test_dit.pptx")
+    manager.test('test_data/final_test_1.pptx')
