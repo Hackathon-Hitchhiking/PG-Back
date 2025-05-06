@@ -255,6 +255,9 @@ class FigureManager:
                 - adjustments (List[int]): Новые значения настроек формы фигуры.
                 - rounding (float): Новое значение скругления углов (0.0-1.0).
 
+        Returns:
+            str: Confirmation of the completion of the task
+
         Вызывает:
             ValueError: Если фигура с указанным ID не найдена на слайде.
         """
@@ -288,6 +291,8 @@ class FigureManager:
 
         if opts.rounding is not None:
             self.set_shape_rounding(slide_id, shape_id, opts.rounding)
+
+        return "Success"
 
     def update_shape_position(
         self,

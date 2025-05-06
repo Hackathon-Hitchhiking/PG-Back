@@ -68,15 +68,16 @@ def get_pptx_agent(pr: PPTXManager) -> Agent:
             f'Кол-во слайдов: {slide_count}',
         ],
         tools=[
-            pr.update_shape_color,
-            pr.update_shape_position,
-            pr.update_shape_transparency,
-            pr.set_shape_rounding,
+            pr.update_shape,
             pr.add_figure_shape,
             pr.copy_figure_shape,
+
             create_image,
+
             pr.copy_image_shape,
+
             pr.add_slide_at_position,
+
             pr.update_text_frame_shape,
             pr.create_text_shape,
             #    pr.delete_figure_shape,
