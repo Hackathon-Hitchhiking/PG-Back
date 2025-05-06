@@ -71,15 +71,17 @@ def get_pptx_agent(pr: PPTXManager) -> Agent:
             pr.update_shape,
             pr.add_figure_shape,
             pr.copy_figure_shape,
+            pr.delete_figure_shape,
 
             create_image,
-
             pr.copy_image_shape,
+            pr.delete_image_shape,
 
             pr.add_slide_at_position,
 
             pr.update_text_frame_shape,
             pr.create_text_shape,
+            pr.delete_text_shape,
             #    pr.delete_figure_shape,
         ],
         model=model_4o,
