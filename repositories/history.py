@@ -46,7 +46,9 @@ class MessageRepository:
         query = select(Message).offset(offset).limit(limit)
 
         if chat_id is None:
-            query.where(Message.chat_id == chat_id)
+            query = query.where(Message.chat_id == chat_id)
+
+        query = query.order_by(desc(Message.created_at))
 
         result = await self._db.execute(query)
         return list(result.scalars().all())
