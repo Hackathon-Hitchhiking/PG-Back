@@ -312,6 +312,9 @@ class FigureManager:
             width (float, optional): Новая ширина в пикселях.
             height (float, optional): Новая высота в пикселях.
 
+        Returns:
+            str: Confirmation of the completion of the task
+
         Вызывает:
             ValueError: Если фигура с указанным ID не найдена на слайде.
         """
@@ -339,6 +342,8 @@ class FigureManager:
             ppt_shape.height = Emu(px_to_emu(height))
             shape.height = height
 
+        return 'Success'
+
     def update_shape_color(self, slide_id: int, shape_id: int, color: list[int]) -> None:
         """
         Обновляет цвет заливки фигуры.
@@ -350,6 +355,9 @@ class FigureManager:
             shape_id (int): ID фигуры для обновления.
             color (list[int]): Новый цвет заливки (RGB).
 
+        Returns:
+            str: Confirmation of the completion of the task
+
         Вызывает:
             ValueError: Если фигура с указанным ID не найдена на слайде.
         """
@@ -360,6 +368,8 @@ class FigureManager:
             raise ValueError(f'Фигура с ID {shape_id} не найдена на слайде {slide_id}')
 
         self._update_shape_fill_color(shape, color)
+
+        return 'Success'
 
     def update_shape_line(self, slide_id: int, shape_id: int, color: list[int] = None, width: float = None) -> None:
         """
@@ -374,6 +384,9 @@ class FigureManager:
             color (list[int], optional): Новый цвет линии (RGB).
             width (float, optional): Новая ширина линии.
 
+        Returns:
+            str: Confirmation of the completion of the task
+
         Вызывает:
             ValueError: Если фигура с указанным ID не найдена на слайде.
         """
@@ -387,6 +400,8 @@ class FigureManager:
         if width is not None:
             self._update_shape_line_width(shape, width)
 
+        return 'Success'
+
     def update_shape_transparency(self, slide_id: int, shape_id: int, transparency: float) -> None:
         """
         Обновляет прозрачность фигуры.
@@ -397,6 +412,9 @@ class FigureManager:
             slide_id (int): ID слайда, содержащего фигуру.
             shape_id (int): ID фигуры для обновления.
             transparency (float): Новое значение прозрачности (0.0-1.0).
+
+        Returns:
+            str: Confirmation of the completion of the task
 
         Вызывает:
             ValueError: Если фигура с указанным ID не найдена на слайде или значение прозрачности вне диапазона.
@@ -412,6 +430,8 @@ class FigureManager:
 
         self._update_shape_transparency(shape, transparency)
 
+        return 'Success'
+
     def update_shape_rotation(self, slide_id: int, shape_id: int, rotation: float) -> None:
         """
         Обновляет поворот фигуры.
@@ -423,6 +443,9 @@ class FigureManager:
             shape_id (int): ID фигуры для обновления.
             rotation (float): Новый угол поворота в градусах.
 
+        Returns:
+            str: Confirmation of the completion of the task
+
         Вызывает:
             ValueError: Если фигура с указанным ID не найдена на слайде.
         """
@@ -431,6 +454,8 @@ class FigureManager:
             raise ValueError(f'Фигура с ID {shape_id} не найдена на слайде {slide_id}')
 
         self._update_shape_rotation(shape, rotation)
+
+        return "Success"
 
     def set_shape_rounding(self, slide_id: int, shape_id: int, rounding_value: float) -> None:
         """
