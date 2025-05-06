@@ -46,7 +46,6 @@ class PPTXManager(
         TableManager.__init__(self)
         FigureManager.__init__(self)
 
-        self.pres = Presentation(source)
         self.parse_choice = {
             MSO_SHAPE_TYPE.PICTURE: self._parse_image_shape,
             MSO_SHAPE_TYPE.AUTO_SHAPE: self._parse_auto_shape,
