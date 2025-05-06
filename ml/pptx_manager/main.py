@@ -56,7 +56,18 @@ class PPTXManager(
             MSO_SHAPE_TYPE.GROUP: self.parse_group_shape,
         }
 
-        self.source = source
+        if isinstance(source, bytes):
+            self._source_bytes = source
+            self.pres = Presentation(BytesIO(source))
+            self.source = None
+        elif isinstance(source, str):
+            self.pres = Presentation(source)
+            self.source = source
+        elif source is None:
+            self.pres = Presentation()
+            self.source = None
+        else:
+            raise TypeError("source must be str (filename), bytes (raw pptx) or None")
 
         self.slide_count = len(self.pres.slides)
 
