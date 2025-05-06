@@ -226,12 +226,28 @@ class PPTXManager(
     def get_json_schema(self) -> dict:
         pres_json = {}
         for slide_id in range(1, len(self.pres.slides) + 1):
-            text_json = self.get_text_frame_json(slide_id)
-            image_json = self.get_image_json(slide_id)
-            slide_json = self.get_slide_json(slide_id)
-            figure_json = self.get_figure_frame_json(slide_id)
+            seen = set()
+            filtered = {'text': [], 'image': [], 'figure': []}
 
-            pres_json[slide_id] = {'text': text_json, 'image': image_json, 'slide': slide_json, 'figure': figure_json}
+            for elem in self.get_text_frame_json(slide_id):
+                if elem['shape_id'] not in seen:
+                    filtered['text'].append(elem)
+                    seen.add(elem['shape_id'])
+
+            for elem in self.get_image_json(slide_id):
+                if elem['shape_id'] not in seen:
+                    filtered['image'].append(elem)
+                    seen.add(elem['shape_id'])
+
+            for elem in self.get_figure_frame_json(slide_id):
+                if elem['shape_id'] not in seen:
+                    filtered['figure'].append(elem)
+                    seen.add(elem['shape_id'])
+
+            pres_json[slide_id] = {
+                **filtered,
+                'slide': self.get_slide_json(slide_id)
+            }
 
         return pres_json
 
