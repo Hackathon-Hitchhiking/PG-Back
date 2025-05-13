@@ -16,7 +16,7 @@ services:
     env_file:
       - .docker/.env
     command:
-      ss-local --server-url=$${PROXY_URL}
+      ss-local --server-url=$${SS_URL}
       -b 0.0.0.0
       -l 1080
       -t 60
