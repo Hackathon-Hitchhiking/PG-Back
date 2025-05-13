@@ -15,14 +15,14 @@ services:
     image: easypi/shadowsocks-libev
     env_file:
       - .docker/.env
+    environment:
+      LOCAL_ADDR: "0.0.0.0"
+      LOCAL_PORT: "1080"
     command:
-      ss-local -c ${PROXY_URL}
-      -p 8388
-      -m aes-256-gcm
-      -b 0.0.0.0
-      -l 1080
-      -t 60
-      --fast-open
+      - sslocal
+      - --server-url=$${PROXY_URL}
+      - -b$${LOCAL_ADDR}:$${LOCAL_PORT}
+      - --tcp-only
 
   postgres:
     image: postgres:latest
