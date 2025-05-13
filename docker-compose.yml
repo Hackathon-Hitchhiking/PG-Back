@@ -16,7 +16,10 @@ services:
     env_file:
       - .docker/.env
     command:
-      ss-local --server-url=$${PROXY_URL}
+      ss-local -s ${PROXY_HOST}
+      -p 8388
+      -m aes-256-gcm
+      -k ${PROXY_PASSWORD}
       -b 0.0.0.0
       -l 1080
       -t 60
