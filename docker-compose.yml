@@ -17,7 +17,7 @@ services:
       - .docker/.env
     command:
       ss-local -s ${PROXY_HOST}
-      -p 53712
+      -p 8388
       -m aes-256-gcm
       -k ${PROXY_PASSWORD}
       -b 0.0.0.0
