@@ -15,6 +15,10 @@ migrate-up:
 local:
 	docker compose -f docker-compose.local.yml up
 
+.PHONY: local
+prod:
+	sudo docker compose --env-file .docker/.env up --build -d
+
 .PHONY: test
 test:
 	uv run pytest
