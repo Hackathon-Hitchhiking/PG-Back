@@ -11,6 +11,13 @@ services:
     command: >
       bash -c "python -m alembic upgrade head && python -m uvicorn app:app --host 0.0.0.0 --port 8000"
 
+  frontend:
+    build:
+      context: ./frontend          # folder that contains the Dockerfile above
+    container_name: frontend-builder
+    volumes:
+      - frontend_storage:/static   # fills the volume at build time
+      
   proxy:
     image: easypi/shadowsocks-libev
     env_file:
@@ -45,6 +52,7 @@ services:
     container_name: nginx
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt
+      - frontend_storage:/usr/share/nginx/html
     env_file:
       - .docker/.env
     depends_on:
@@ -73,3 +81,4 @@ services:
 volumes:
   postgres_storage:
   static_storage:
+  frontend_storage:
