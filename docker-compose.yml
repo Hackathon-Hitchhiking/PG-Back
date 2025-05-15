@@ -14,7 +14,7 @@ services:
   frontend:
     build:
       context: ./frontend
-    container_name: frontend-builder
+    container_name: frontend
     command:
       sh -c "yarn build"
     volumes:
@@ -59,7 +59,6 @@ services:
       - .docker/.env
     depends_on:
       - app
-      - frontend-builder
     ports:
       - "80:80"
       - "443:443"
