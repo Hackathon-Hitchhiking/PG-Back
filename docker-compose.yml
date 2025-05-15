@@ -13,11 +13,13 @@ services:
 
   frontend:
     build:
-      context: ./frontend          # folder that contains the Dockerfile above
+      context: ./frontend
     container_name: frontend-builder
+    command:
+      sh -c "yarn build"
     volumes:
-      - frontend_storage:/static   # fills the volume at build time
-      
+      - frontend_storage:/app/build   
+
   proxy:
     image: easypi/shadowsocks-libev
     env_file:
@@ -57,6 +59,7 @@ services:
       - .docker/.env
     depends_on:
       - app
+      - frontend-builder
     ports:
       - "80:80"
       - "443:443"
